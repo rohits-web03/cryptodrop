@@ -1,9 +1,20 @@
+import Login from "./components/Login"
+import Register from "./components/Register"
+import FileUpload from "./components/FileUpload";
+import { BrowserRouter,Routes,Route,Navigate } from "react-router-dom";
 function App() {
   return (
-    <>
-      <h1 className="text-3xl font-bold underline">CryptoDrop</h1>
-    </>
-  )
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Navigate to="/register"/>}/>
+        <Route path="/login" element={<Login/>}/>
+        <Route path="/register" element={<Register/>}/>
+        <Route path="/share/send" element={<FileUpload/>}/>
+      </Routes>
+
+      
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
