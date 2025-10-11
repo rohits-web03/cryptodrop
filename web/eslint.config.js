@@ -1,23 +1,53 @@
-import js from '@eslint/js'
-import globals from 'globals'
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
-import tseslint from 'typescript-eslint'
-import { globalIgnores } from 'eslint/config'
+import css from '@eslint/css';
+import js from '@eslint/js';
+import json from '@eslint/json';
+import pluginReact from 'eslint-plugin-react';
+import { defineConfig } from 'eslint/config';
+import globals from 'globals';
+import tseslint from 'typescript-eslint';
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      js.configs.recommended,
-      tseslint.configs.recommended,
-      reactHooks.configs['recommended-latest'],
-      reactRefresh.configs.vite,
-    ],
-    languageOptions: {
-      ecmaVersion: 2020,
-      globals: globals.browser,
-    },
-  },
-])
+export default defineConfig([
+	{
+		files: ['**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+		ignores: ['dist', 'node_modules', 'build'],
+		languageOptions: {
+			parser: tseslint.parser,
+			parserOptions: {
+				ecmaVersion: 'latest',
+				sourceType: 'module',
+				ecmaFeatures: { jsx: true },
+			},
+			globals: { ...globals.browser, ...globals.node },
+		},
+		settings: {
+			react: { version: 'detect' },
+		},
+		plugins: {
+			js,
+			react: pluginReact,
+			'@typescript-eslint': tseslint.plugin,
+		},
+		extends: ['js/recommended'],
+	},
+	tseslint.configs.recommended,
+	pluginReact.configs.flat.recommended,
+	{
+		files: ['**/*.json'],
+		plugins: { json },
+		language: 'json/json',
+		extends: ['json/recommended'],
+	},
+	{
+		files: ['**/*.jsonc'],
+		plugins: { json },
+		language: 'json/jsonc',
+		extends: ['json/recommended'],
+	},
+	{
+		files: ['**/*.json5'],
+		plugins: { json },
+		language: 'json/json5',
+		extends: ['json/recommended'],
+	},
+	{ files: ['**/*.css'], plugins: { css }, language: 'css/css', extends: ['css/recommended'] },
+]);
