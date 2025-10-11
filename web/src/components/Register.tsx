@@ -1,33 +1,29 @@
-
-import { useForm} from "react-hook-form";
-import {z} from "zod";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { registerSchema } from "@/auth.schema";
-import{Card,CardHeader,CardTitle,CardContent,CardFooter} from "@/components/ui/card";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
+import { registerSchema } from "@/schema/auth";
+import type { RegisterFormFields } from "@/types/auth";
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import{User,Lock,Mail} from "lucide-react";
-import{Link} from "react-router-dom";
-
-type RegisterFormFields=z.infer<typeof registerSchema>; 
+import { User, Lock, Mail } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Register: React.FC = () => {
   const {
     register,
     handleSubmit,
-    
+
     formState: { errors },
   } = useForm<RegisterFormFields>({
-    resolver:zodResolver(registerSchema),
+    resolver: zodResolver(registerSchema),
   });
 
   //const password = watch("password");
 
-  const onSubmit= (data:RegisterFormFields) => {
+  const onSubmit = (data: RegisterFormFields) => {
     console.log("Form Data:", data);
     alert("Registration Successful");
-    
   };
 
   return (
@@ -38,48 +34,47 @@ const Register: React.FC = () => {
         </CardHeader>
         <CardContent>
           <form
-        onSubmit={handleSubmit(onSubmit)}
-        noValidate
-        className="space-y-5"
-      >
-        <div>
-          <Label htmlFor="username">Username</Label>
-          <div className="relative mt-2">
-            <Input id="username" placeholder="Enter Your Username" {...register("username")} className="pl-10 bg-white/20 text-white border-none placeholder-gray-300"/>
-            <User className="absolute left-3 top-3 text-gray-300 " size={20} strokeWidth={2}/>
-          </div>
-          {errors.username &&<p className="text-red-400 text-sm mt-1">{errors.username.message}</p>}
-        </div>
+            onSubmit={handleSubmit(onSubmit)}
+            noValidate
+            className="space-y-5"
+          >
+            <div>
+              <Label htmlFor="username">Username</Label>
+              <div className="relative mt-2">
+                <Input id="username" placeholder="Enter Your Username" {...register("username")} className="pl-9 bg-white/20 text-white border-none placeholder-gray-300" />
+                <User className="absolute left-[0.5rem] top-[0.5rem] text-gray-300 " size={20} strokeWidth={2} />
+              </div>
+              {errors.username && <p className="text-red-400 text-sm mt-1">{errors.username.message}</p>}
+            </div>
 
-         <div>
-          <Label htmlFor="email">Email</Label>
-          <div className="relative mt-2">
-            <Input id="email" type="email" placeholder="Enter Your Email" {...register("email")} className="pl-10 bg-white/20 text-white border-none placeholder-gray-300"/>
-            <Mail className="absolute left-3 top-3 text-gray-300 " size={20} strokeWidth={2}/>
-          </div>
-          {errors.email &&<p className="text-red-400 text-sm mt-1">{errors.email.message}</p>}
-        </div>
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <div className="relative mt-2">
+                <Input id="email" type="email" placeholder="Enter Your Email" {...register("email")} className="pl-9 bg-white/20 text-white border-none placeholder-gray-300" />
+                <Mail className="absolute left-[0.5rem] top-[0.5rem] text-gray-300 " size={20} strokeWidth={2} />
+              </div>
+              {errors.email && <p className="text-red-400 text-sm mt-1">{errors.email.message}</p>}
+            </div>
 
-         <div>
-          <Label htmlFor="password">Password</Label>
-          <div className="relative mt-2">
-            <Input id="password" type="password" placeholder="Enter Your Password" {...register("password")} className="pl-10 bg-white/20 text-white border-none placeholder-gray-300"/>
-            <Lock className="absolute left-3 top-3 text-gray-300 " size={20} strokeWidth={2}/>
-          </div>
-          {errors.password &&<p className="text-red-400 text-sm mt-1">{errors.password.message}</p>}
-        </div>
+            <div>
+              <Label htmlFor="password">Password</Label>
+              <div className="relative mt-2">
+                <Input id="password" type="password" placeholder="Enter Your Password" {...register("password")} className="pl-9 bg-white/20 text-white border-none placeholder-gray-300" />
+                <Lock className="absolute left-[0.5rem] top-[0.5rem] text-gray-300 " size={20} strokeWidth={2} />
+              </div>
+              {errors.password && <p className="text-red-400 text-sm mt-1">{errors.password.message}</p>}
+            </div>
 
-         <div>
-          <Label htmlFor="confirmPassword">Confirm Password</Label>
-          <div className="relative mt-2">
-            <Input id="confirmPassword" type="password" placeholder="Confirm Password" {...register("confirmPassword")} className="pl-10 bg-white/20 text-white border-none placeholder-gray-300"/>
-            <Lock className="absolute left-3 top-3 text-gray-300 " size={20} strokeWidth={2}/>
-          </div>
-          {errors.confirmPassword &&<p className="text-red-400 text-sm mt-1">{errors.confirmPassword.message}</p>}
-        </div>
-        <Button type="submit" className="w-full mt-4 bg-white text-black hover:bg-gray-200 cursor-pointer">Register</Button>
-
-      </form>
+            <div>
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <div className="relative mt-2">
+                <Input id="confirmPassword" type="password" placeholder="Confirm Password" {...register("confirmPassword")} className="pl-9 bg-white/20 text-white border-none placeholder-gray-300" />
+                <Lock className="absolute left-[0.5rem] top-[0.5rem] text-gray-300 " size={20} strokeWidth={2} />
+              </div>
+              {errors.confirmPassword && <p className="text-red-400 text-sm mt-1">{errors.confirmPassword.message}</p>}
+            </div>
+            <Button type="submit" className="w-full mt-4 bg-white text-black hover:bg-gray-200 cursor-pointer">Register</Button>
+          </form>
 
         </CardContent>
         <CardFooter className="flex justify-center text-sm mt-4">Already Have An Account?{" "}
@@ -90,5 +85,4 @@ const Register: React.FC = () => {
   );
 };
 export default Register;
-      
-       
+

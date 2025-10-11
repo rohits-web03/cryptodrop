@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Download, Eye, File, Trash2 } from "lucide-react";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 
 const FileReceive: React.FC = () => {
   const [receivedFiles, setreceivedFiles] = useState([
