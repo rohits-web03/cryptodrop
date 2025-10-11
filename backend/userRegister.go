@@ -9,17 +9,8 @@ import (
 
     "golang.org/x/crypto/bcrypt"
     "gorm.io/gorm"
+    "cryptodrop-backend/models"
 )
-
-type User struct {
-    UserName  string `gorm:"column:userName;size:20;unique"`          // VARCHAR(20) UNIQUE
-    UserEmail string `gorm:"column:userEmail;size:40;primaryKey"`      // VARCHAR(40) PRIMARY KEY
-    Password  string `gorm:"column:pword;not null"`                // TEXT NOT NULL
-}
-
-func (User) TableName() string {
-    return `"User Info"`
-}
 
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
     if r.Method != http.MethodPost {
@@ -27,7 +18,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    var reqUser User
+    var reqUser models.User
     err := json.NewDecoder(r.Body).Decode(&reqUser)
     if err != nil {
         http.Error(w, "Invalid request body", http.StatusBadRequest)
@@ -45,7 +36,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
     reqUser.Password = string(hashedPassword)
 
     // Check if email already exists
-    var existing User
+    var existing models.User
     if err := DB.Where(`"userEmail" = ?`, reqUser.UserEmail).First(&existing).Error; err == nil {
         http.Error(w, "User with this email already exists", http.StatusConflict)
         return
