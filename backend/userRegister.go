@@ -1,6 +1,3 @@
-// connect to Neon DB
-// register users
-
 package main
 
 import (
@@ -8,8 +5,10 @@ import (
     "fmt"
     "log"
     "net/http"
+    "strings"
 
     "golang.org/x/crypto/bcrypt"
+    "gorm.io/gorm"
 )
 
 type User struct {
@@ -45,14 +44,35 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
     // Replace plaintext with hashed password
     reqUser.Password = string(hashedPassword)
 
-    // Save to DB
+    // Check if email already exists
+    var existing User
+    if err := DB.Where(`"userEmail" = ?`, reqUser.UserEmail).First(&existing).Error; err == nil {
+        http.Error(w, "User with this email already exists", http.StatusConflict)
+        return
+    }else if err := DB.Where(`"userName" = ?`, reqUser.UserName).First(&existing).Error; err == nil {
+        http.Error(w, "User with this username already exists", http.StatusConflict)
+        return
+    } else if err != nil && err != gorm.ErrRecordNotFound {
+        http.Error(w, "Database error", http.StatusInternalServerError)
+        log.Println("DB lookup error:", err)
+        return
+    }
+
+    // Create user
     result := DB.Create(&reqUser)
     if result.Error != nil {
+        if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint") {
+            http.Error(w, "Email already registered", http.StatusConflict)
+            return
+        }
         http.Error(w, "Failed to register user", http.StatusInternalServerError)
         log.Println(result.Error)
         return
     }
+        w.WriteHeader(http.StatusCreated)
+        fmt.Fprintln(w, "✅ User registered successfully!")
+    }
 
-    w.WriteHeader(http.StatusCreated)
-    fmt.Fprintln(w, "✅ User registered successfully!")
-}
+// To be added:
+// add check for email ID
+// 
