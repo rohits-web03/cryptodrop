@@ -34,8 +34,8 @@ const Login: React.FC = () => {
               <Label htmlFor="username">Username</Label>
               <div className="relative mt-2">
                 <Input id="username" placeholder="Enter Your Username"
-                  {...register("username")} className="pl-10 bg-white/20 text-white border-none placeholder-gray-300" />
-                <User className="absolute left-3 top-3 text-gray-300" size={20} strokeWidth={2} />
+                  {...register("username")} className="pl-9 bg-white/20 text-white border-none placeholder-gray-300" />
+                <User className="absolute left-[0.5rem] top-[0.5rem] text-gray-300" size={20} strokeWidth={2} />
               </div>
               {errors.username && <p className="text-red-400 text-sm mt-1">{errors.username.message}</p>}
             </div>
@@ -44,15 +44,15 @@ const Login: React.FC = () => {
               <Label htmlFor="password">Password</Label>
               <div className="relative mt-2">
                 <Input id="password" type="password" placeholder="Enter Your Password"
-                  {...register("password")} className="pl-10 bg-white/20 text-white border-none placeholder-gray-300" />
-                <Lock className="absolute left-3 top-3 text-gray-300" size={20} strokeWidth={2} />
+                  {...register("password")} className="pl-9 bg-white/20 text-white border-none placeholder-gray-300" />
+                <Lock className="absolute left-[0.5rem] top-[0.5rem] text-gray-300" size={20} strokeWidth={2} />
               </div>
               {errors.password && <p className="text-red-400 text-sm mt-1">{errors.password.message}</p>}
             </div>
-            <Button type="submit" className="w-full mt-6 bg-white text-black hover:bg-gray-200 cursor-pointer">Login</Button>
+            <Button type="submit" className="w-full bg-white text-black hover:bg-gray-200 cursor-pointer">Login</Button>
           </form>
         </CardContent>
-        <CardFooter className="flex justify-center text-sm mt-4">
+        <CardFooter className="flex justify-center text-sm">
           Don't have an account?{" "}
           <Link to="/register" className="ml-1 text-blue-400 font-semibold hover:underline">Register</Link>
         </CardFooter>

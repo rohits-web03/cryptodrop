@@ -73,11 +73,11 @@ const Register: React.FC = () => {
               </div>
               {errors.confirmPassword && <p className="text-red-400 text-sm mt-1">{errors.confirmPassword.message}</p>}
             </div>
-            <Button type="submit" className="w-full mt-4 bg-white text-black hover:bg-gray-200 cursor-pointer">Register</Button>
+            <Button type="submit" className="w-full mt-2 bg-white text-black hover:bg-gray-200 cursor-pointer">Register</Button>
           </form>
 
         </CardContent>
-        <CardFooter className="flex justify-center text-sm mt-4">Already Have An Account?{" "}
+        <CardFooter className="flex justify-center text-sm">Already have an account?{" "}
           <Link to="/login" className="ml-1 text-blue-400 font-semibold hover:underline">Login</Link>
         </CardFooter>
       </Card>
