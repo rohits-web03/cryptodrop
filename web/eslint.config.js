@@ -7,6 +7,8 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig([
+	tseslint.configs.recommended,
+	pluginReact.configs.flat.recommended,
 	{
 		files: ['**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
 		ignores: ['dist', 'node_modules', 'build'],
@@ -28,9 +30,15 @@ export default defineConfig([
 			'@typescript-eslint': tseslint.plugin,
 		},
 		extends: ['js/recommended'],
+		rules: {
+			'@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }], // avoid unused vars noise
+			'react/react-in-jsx-scope': 'off',
+			'react/jsx-key': 'warn', // catch missing keys in lists
+			'react/self-closing-comp': 'warn', // prefer self-closing tags when no children
+			eqeqeq: 'error', // always use ===
+			'no-console': 'warn', // warn on console.log
+		},
 	},
-	tseslint.configs.recommended,
-	pluginReact.configs.flat.recommended,
 	{
 		files: ['**/*.json'],
 		plugins: { json },
