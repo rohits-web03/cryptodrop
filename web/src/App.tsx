@@ -1,9 +1,24 @@
+import Login from "@/components/Login"
+import Register from "@/components/Register"
+import FileUpload from "@/components/FileUpload";
+import FileReceive from "@/components/FileReceive";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
 function App() {
   return (
-    <>
-      <h1 className="text-3xl font-bold underline">CryptoDrop</h1>
-    </>
-  )
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<h1>Home</h1>} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/share">
+          <Route index element={<Navigate to="/share/send" replace />} />
+          <Route path="send" element={<FileUpload />} />
+          <Route path="receive" element={<FileReceive />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
