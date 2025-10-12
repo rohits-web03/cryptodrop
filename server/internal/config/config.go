@@ -10,10 +10,11 @@ import (
 )
 
 type Config struct {
-	DB_URL     string
-	Port       string
-	JWTSecret  string
-	CorsConfig cors.Options
+	DB_URL      string
+	Port        string
+	JWTSecret   string
+	Environment string
+	CorsConfig  cors.Options
 }
 
 var Envs = initConfig()
@@ -25,10 +26,11 @@ func initConfig() Config {
 	}
 
 	return Config{
-		DB_URL:     getEnv("DB_URL", ""),
-		Port:       getEnv("PORT", "8080"),
-		JWTSecret:  getEnv("JWT_SECRET", "not-so-secret-now-is-it?"),
-		CorsConfig: CorsConfig(),
+		DB_URL:      getEnv("DB_URL", ""),
+		Port:        getEnv("PORT", "8080"),
+		JWTSecret:   getEnv("JWT_SECRET", "not-so-secret-now-is-it?"),
+		Environment: getEnv("ENV", "development"),
+		CorsConfig:  CorsConfig(),
 	}
 }
 
