@@ -1,14 +1,18 @@
 # CryptoDrop Client
+
 This directory contains the React frontend application built with Vite and managed with pnpm.
 
 ## Table of Contents
+
 - [Prerequisites](#prerequisites)
 - [Local Development (without Docker)](#local-development-without-docker)
-- [Docker Setup](#docker-setup)    
+- [Docker Setup](#docker-setup)
 - [Other Useful Docker Commands](#other-useful-docker-commands)
+
 ## Prerequisites
 
 Before you begin, ensure you have the following installed on your system:
+
 - [Node.js](https://nodejs.org/) (v20 or higher recommended)
 - [pnpm](https://pnpm.io/installation) (You can install it via `npm install -g pnpm` or rely on Corepack)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop) (or Docker Engine)
@@ -16,7 +20,9 @@ Before you begin, ensure you have the following installed on your system:
 ## Local Development (without Docker)
 
 If you prefer to run the React application directly on your host machine without Docker:
-1.  **Install dependencies:**    
+
+1.  **Install dependencies:**
+
 ```bash
 pnpm install
 ```
