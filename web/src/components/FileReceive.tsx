@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Download, Eye, File, Trash2 } from 'lucide-react';
 import React from 'react';
 import { useState } from 'react';
@@ -8,6 +9,7 @@ const FileReceive: React.FC = () => {
 		{ name: 'File1.pdf', size: '1MB' },
 		{ name: 'File2.txt', size: '2KB' },
 	]);
+	const [sharingLink, setSharingLink] = useState('');
 	const handleDownload = (fileName: string) => {
 		alert(`Downloading ${fileName}...`);
 	};
@@ -28,6 +30,21 @@ const FileReceive: React.FC = () => {
 			</header>
 
 			<div className="bg-gray-800 p-6 rounded-2xl shadow-2xl w-full max-w-md text-center">
+				<div className="mb-6 flex items-center gap-3">
+					<Input
+						type="text"
+						placeholder="Enter Sharing Link"
+						value={sharingLink}
+						onChange={(e) => setSharingLink(e.target.value)}
+						className="bg-gray-700 text-white border-none placeholder-gray-400 flex-1"
+					/>
+					<Button
+						className="bg-blue-600 hover:bg-blue-500 text-white cursor-pointer"
+						onClick={() => alert(`Fetching files from:${sharingLink}`)}
+					>
+						Receive
+					</Button>
+				</div>
 				{receivedFiles.length === 0 ? (
 					<p className="text-gray-400 italic">No Files Received Yet.</p>
 				) : (
