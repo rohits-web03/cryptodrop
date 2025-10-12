@@ -8,9 +8,13 @@ import (
 	"time"
 
 	"github.com/rohits-web03/cryptodrop/internal/api"
+	"github.com/rohits-web03/cryptodrop/internal/repositories"
 )
 
 func main() {
+	// Connect to database
+	repositories.ConnectDatabase()
+
 	const defaultPort = "8080"
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -28,7 +32,7 @@ func main() {
 		IdleTimeout:  120 * time.Second,
 	}
 
-	log.Printf("Starting CryptoDrop server on http://localhost:%s", port)
+	log.Printf("Starting CryptoDrop server on port: %s", port)
 
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("Could not listen on port %s: %v", port, err)
