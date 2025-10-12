@@ -1,4 +1,4 @@
-import React from "react";
+import React,{useState} from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema } from "@/schema/auth";
@@ -7,7 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, Lock } from "lucide-react";
+import { User, Lock, EyeOff, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Login: React.FC = () => {
@@ -17,6 +17,8 @@ const Login: React.FC = () => {
     handleSubmit,
     formState: { errors },
   } = useForm<LogInFormFields>({ resolver: zodResolver(loginSchema), });
+
+  const [showPassword,setShowPassword]=useState(false);
 
   const onSubmit = (data: LogInFormFields) => {
     console.log("Login Data", data);
@@ -43,9 +45,12 @@ const Login: React.FC = () => {
             <div>
               <Label htmlFor="password">Password</Label>
               <div className="relative mt-2">
-                <Input id="password" type="password" placeholder="Enter Your Password"
+                <Input id="password" type={showPassword?"text":"password"} placeholder="Enter Your Password"
                   {...register("password")} className="pl-9 bg-white/20 text-white border-none placeholder-gray-300" />
                 <Lock className="absolute left-[0.5rem] top-[0.5rem] text-gray-300" size={20} strokeWidth={2} />
+                <Button type="button" variant="ghost" size="icon" onClick={()=>setShowPassword(!showPassword)} className="absolute right-3 top-3 text-gray-300 cursor-pointer hover:text-white">
+                  {showPassword?<EyeOff size={20}/>:<Eye size={20}/>}
+                </Button>
               </div>
               {errors.password && <p className="text-red-400 text-sm mt-1">{errors.password.message}</p>}
             </div>
