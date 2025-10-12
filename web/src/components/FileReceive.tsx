@@ -4,11 +4,13 @@ import { Download, Eye, File, Trash2 } from 'lucide-react';
 import React from 'react';
 import { useState } from 'react';
 
+interface ReceivedFile {
+	name: string;
+	size: string;
+}
+
 const FileReceive: React.FC = () => {
-	const [receivedFiles, setreceivedFiles] = useState([
-		{ name: 'File1.pdf', size: '1MB' },
-		{ name: 'File2.txt', size: '2KB' },
-	]);
+	const [receivedFiles, setreceivedFiles] = useState<ReceivedFile[]>([]);
 	const [sharingLink, setSharingLink] = useState('');
 	const handleDownload = (fileName: string) => {
 		alert(`Downloading ${fileName}...`);
@@ -22,7 +24,7 @@ const FileReceive: React.FC = () => {
 	return (
 		<div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 to-gray-700 text-gray-200 px-4">
 			<header className="mb-8 text-center">
-				<h1 className="text-3xl font-bold mb-2 text-white">Received Files</h1>
+				<h1 className="text-3xl font-bold mb-2 text-white">Receive Files</h1>
 				<p className="text-gray-400 max-w-md mx-auto">
 					View,Download or Delete Files Shared with You.Can preview documents or remove
 					them after download.
@@ -40,7 +42,17 @@ const FileReceive: React.FC = () => {
 					/>
 					<Button
 						className="bg-blue-600 hover:bg-blue-500 text-white cursor-pointer"
-						onClick={() => alert(`Fetching files from:${sharingLink}`)}
+						onClick={() => {
+							if (!sharingLink.trim()) {
+								alert('Please Enter a valid link');
+								return;
+							}
+							setreceivedFiles([
+								{ name: 'File1.pdf', size: '1MB' },
+								{ name: 'File2.txt', size: '2KB' },
+							]);
+							alert(`Fetching Files from:${sharingLink}`);
+						}}
 					>
 						Receive
 					</Button>
