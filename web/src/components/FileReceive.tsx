@@ -1,16 +1,12 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { type FileInfo } from '@/types/file';
 import { Download, Eye, File, Trash2 } from 'lucide-react';
 import React from 'react';
 import { useState } from 'react';
 
-interface ReceivedFile {
-	name: string;
-	size: string;
-}
-
 const FileReceive: React.FC = () => {
-	const [receivedFiles, setreceivedFiles] = useState<ReceivedFile[]>([]);
+	const [receivedFiles, setreceivedFiles] = useState<FileInfo[]>([]);
 	const [sharingLink, setSharingLink] = useState('');
 	const handleDownload = (fileName: string) => {
 		alert(`Downloading ${fileName}...`);
