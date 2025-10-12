@@ -38,10 +38,13 @@ const Register: React.FC = () => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-black text-white">
       <Card className="w-full max-w-md bg-white/10 backdrop-blur-md text-white border-none shadow-xl">
-        <CardHeader>
-          <CardTitle className="text-center text-3xl font-bold">
-            Register
+        <CardHeader className="text-center">
+          <CardTitle className="text-3xl font-bold">
+            Create An Account
           </CardTitle>
+          <p className="text-sm text-gray-300 mt-2">
+            Join us to securely upload and receive files with ease.
+          </p>
         </CardHeader>
         <CardContent>
           <form
@@ -111,7 +114,7 @@ const Register: React.FC = () => {
                 />
                 <Button
                   type="button" variant="ghost" size="icon"
-                  className="absolute right-3 top-3 text-gray-300 cursor-pointer hover:text-white "
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-300 cursor-pointer hover:text-white hover:bg-transparent "
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -141,7 +144,7 @@ const Register: React.FC = () => {
                 />
                <Button
                   type="button" variant="ghost" size="icon"
-                  className="absolute right-3 top-3 text-gray-300 cursor-pointer hover:text-white "
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-300 cursor-pointer hover:text-white hover:bg-transparent "
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
                   {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
