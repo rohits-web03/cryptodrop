@@ -3,6 +3,7 @@ import FileUpload from '@/components/FileUpload';
 import Login from '@/components/Login';
 import Register from '@/components/Register';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'sonner';
 
 function App() {
 	return (
@@ -17,6 +18,7 @@ function App() {
 					<Route path="receive" element={<FileReceive />} />
 				</Route>
 			</Routes>
+			<Toaster position="top-right" richColors closeButton />
 		</BrowserRouter>
 	);
 }

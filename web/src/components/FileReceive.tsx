@@ -7,6 +7,7 @@ import { Download, Eye, File as FileIcon, Trash2 } from 'lucide-react';
 import React from 'react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 
 const FileReceive: React.FC = () => {
 	const [receivedFiles, setreceivedFiles] = useState<File[]>([]);
@@ -21,20 +22,27 @@ const FileReceive: React.FC = () => {
 	});
 
 	const onSubmit = ({ sharingLink }: ReceiveInput) => {
-		setreceivedFiles([
-			{ name: 'File1.pdf', size: '1MB' },
-			{ name: 'File2.txt', size: '2KB' },
-		]);
-		console.log(`Fetching files from: ${sharingLink}`);
-		reset();
+		const promise = () => new Promise<void>((resolve) => setTimeout(() => resolve(), 2000));
+		toast.promise(promise, {
+			loading: `Fetching files from: ${sharingLink}`,
+			success: () => {
+				setreceivedFiles([
+					{ name: 'File1.pdf', size: '1MB' },
+					{ name: 'File2.txt', size: '2KB' },
+				]);
+				reset();
+				return `Files received successfully!`;
+			},
+			error: 'Failed to receive files',
+		});
 	};
 
 	const handleDownload = (fileName: string) => {
-		alert(`Downloading ${fileName}...`);
+		toast.info(`Downloading ${fileName}...`);
 	};
 
 	const handlePreview = (fileName: string) => {
-		alert(`Previewing ${fileName}...`);
+		toast.info(`Previewing ${fileName}...`);
 	};
 
 	const handleRemove = (index: number) => {
