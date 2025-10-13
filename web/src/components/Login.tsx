@@ -9,6 +9,7 @@ import { User, Lock, EyeOff, Eye } from 'lucide-react';
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 
 const Login: React.FC = () => {
 	//const navigate=useNavigate();
@@ -22,7 +23,7 @@ const Login: React.FC = () => {
 
 	const onSubmit = (data: LogInFormFields) => {
 		console.log('Login Data', data);
-		alert('Successfully Logged In');
+		toast.success('Successfully Logged In');
 	};
 	return (
 		<div className="flex items-center justify-center min-h-screen bg-black">

@@ -10,6 +10,7 @@ import React from 'react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 
 const Register: React.FC = () => {
 	const [showPassword, setShowPassword] = useState(false);
@@ -27,7 +28,7 @@ const Register: React.FC = () => {
 
 	const onSubmit = (data: RegisterFormFields) => {
 		console.log('Form Data:', data);
-		alert('Registration Successful');
+		toast.success('Registration Successful');
 	};
 
 	return (
