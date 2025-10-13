@@ -18,8 +18,8 @@ const Register: React.FC = () => {
 	const {
 		register,
 		handleSubmit,
-
 		formState: { errors },
+		reset,
 	} = useForm<RegisterFormFields>({
 		resolver: zodResolver(registerSchema),
 	});
@@ -29,6 +29,7 @@ const Register: React.FC = () => {
 	const onSubmit = (data: RegisterFormFields) => {
 		console.log('Form Data:', data);
 		toast.success('Registration Successful');
+		reset();
 	};
 
 	return (

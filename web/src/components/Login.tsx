@@ -17,6 +17,7 @@ const Login: React.FC = () => {
 		register,
 		handleSubmit,
 		formState: { errors },
+		reset,
 	} = useForm<LogInFormFields>({ resolver: zodResolver(loginSchema) });
 
 	const [showPassword, setShowPassword] = useState(false);
@@ -24,6 +25,7 @@ const Login: React.FC = () => {
 	const onSubmit = (data: LogInFormFields) => {
 		console.log('Login Data', data);
 		toast.success('Successfully Logged In');
+		reset();
 	};
 	return (
 		<div className="flex items-center justify-center min-h-screen bg-black">

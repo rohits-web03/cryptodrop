@@ -22,16 +22,19 @@ const FileReceive: React.FC = () => {
 	});
 
 	const onSubmit = ({ sharingLink }: ReceiveInput) => {
-		toast.info(`Fetching files from: ${sharingLink}`);
-
-		setTimeout(() => {
-			setreceivedFiles([
-				{ name: 'File1.pdf', size: '1MB' },
-				{ name: 'File2.txt', size: '2KB' },
-			]);
-			toast.success('Files received successfully!');
-			reset();
-		}, 1000);
+		const promise = () => new Promise<void>((resolve) => setTimeout(() => resolve(), 2000));
+		toast.promise(promise, {
+			loading: `Fetching files from: ${sharingLink}`,
+			success: () => {
+				setreceivedFiles([
+					{ name: 'File1.pdf', size: '1MB' },
+					{ name: 'File2.txt', size: '2KB' },
+				]);
+				reset();
+				return `Files received successfully!`;
+			},
+			error: 'Failed to receive files',
+		});
 	};
 
 	const handleDownload = (fileName: string) => {
