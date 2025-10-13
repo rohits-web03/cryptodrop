@@ -5,6 +5,9 @@ import (
 	"log"
 	"net/http"
 
+	_ "github.com/rohits-web03/cryptodrop/docs"
+	httpSwagger "github.com/swaggo/http-swagger"
+
 	"github.com/rohits-web03/cryptodrop/internal/api/handlers"
 	"github.com/rohits-web03/cryptodrop/internal/config"
 	"github.com/rs/cors"
@@ -54,6 +57,9 @@ func SetupRouter() http.Handler {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		fmt.Fprintf(w, "OK")
 	})
+
+	// Swagger documentation
+	mainMux.HandleFunc("/docs/", httpSwagger.WrapHandler)
 
 	log.Println("Router initialized with core and API routes.")
 	return handler

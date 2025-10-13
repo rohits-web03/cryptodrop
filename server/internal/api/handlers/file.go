@@ -15,6 +15,16 @@ import (
 var files = make(map[string]models.File) // temporary in-memory store
 
 // POST /api/v1/files/upload
+// UploadFile godoc
+// @Summary Upload one or more files
+// @Description Upload files and get their unique download links
+// @Tags Files
+// @Accept multipart/form-data
+// @Produce json
+// @Param files formData file true "Files to upload" style(form) explode(true)
+// @Success 200 {object} utils.Payload
+// @Failure 400 {object} utils.Payload
+// @Router /api/v1/files/upload [post]
 func UploadFile(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseMultipartForm(100 << 20); err != nil { // 100 MB total max
 		utils.JSONResponse(w, http.StatusBadRequest, utils.Payload{
@@ -85,6 +95,14 @@ func UploadFile(w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /api/v1/files
+// ListFiles godoc
+// @Summary List all uploaded files
+// @Description List all uploaded files with their download links
+// @Tags Files
+// @Produce json
+// @Success 200 {object} utils.Payload
+// @Failure 400 {object} utils.Payload
+// @Router /api/v1/files [get]
 func ListFiles(w http.ResponseWriter, r *http.Request) {
 	var allFiles []map[string]interface{}
 
@@ -105,6 +123,15 @@ func ListFiles(w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /api/v1/files/download/{id}
+// DownloadFile godoc
+// @Summary Download a file
+// @Description Download a file by its ID
+// @Tags Files
+// @Produce json
+// @Param id path string true "File ID"
+// @Success 200 {object} utils.Payload
+// @Failure 400 {object} utils.Payload
+// @Router /api/v1/files/download/{id} [get]
 func DownloadFile(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	file, ok := files[id]
