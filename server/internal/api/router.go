@@ -34,6 +34,14 @@ func SetupRouter() http.Handler {
 	authMux.HandleFunc("/login", handlers.LoginUser)
 	authMux.HandleFunc("/logout", handlers.Logout)
 
+	fileMux := http.NewServeMux()
+	fileMux.HandleFunc("/", handlers.ListFiles)
+	fileMux.HandleFunc("/upload", handlers.UploadFile)
+	fileMux.HandleFunc("/download/{id}", handlers.DownloadFile)
+
+	// Mount fileMux under /files
+	apiMux.Handle("/files/", http.StripPrefix("/files", fileMux))
+
 	// Mount authMux under /auth
 	apiMux.Handle("/auth/", http.StripPrefix("/auth", authMux))
 
