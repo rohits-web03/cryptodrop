@@ -29,12 +29,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
-<<<<<<< HEAD
-=======
       framer-motion:
         specifier: ^12.23.24
         version: 12.23.24(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
->>>>>>> c234069 (Landing Page design added and color theme fixed)
       lucide-react:
         specifier: ^0.545.0
         version: 0.545.0(react@19.1.1)
@@ -44,15 +41,12 @@ importers:
       react:
         specifier: ^19.1.0
         version: 19.1.1
-<<<<<<< HEAD
-=======
       react-collapse:
         specifier: ^5.1.1
         version: 5.1.1(react@19.1.1)
       react-countup:
         specifier: ^6.5.3
         version: 6.5.3(react@19.1.1)
->>>>>>> c234069 (Landing Page design added and color theme fixed)
       react-dom:
         specifier: ^19.1.0
         version: 19.1.1(react@19.1.1)
@@ -62,12 +56,9 @@ importers:
       react-router-dom:
         specifier: ^7.9.4
         version: 7.9.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-<<<<<<< HEAD
-=======
       react-scroll:
         specifier: ^1.9.3
         version: 1.9.3(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
->>>>>>> c234069 (Landing Page design added and color theme fixed)
       sonner:
         specifier: ^2.0.7
         version: 2.0.7(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -99,11 +90,9 @@ importers:
       '@types/react':
         specifier: ^19.1.8
         version: 19.1.9
-<<<<<<< HEAD
       '@types/react-dom':
         specifier: ^19.1.6
         version: 19.1.7(@types/react@19.1.9)
-=======
       '@types/react-collapse':
         specifier: ^5.0.4
         version: 5.0.4
@@ -113,7 +102,6 @@ importers:
       '@types/react-scroll':
         specifier: ^1.8.10
         version: 1.8.10
->>>>>>> c234069 (Landing Page design added and color theme fixed)
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.46.0
         version: 8.46.0(@typescript-eslint/parser@8.46.0(eslint@9.32.0(jiti@2.6.1))(typescript@5.8.3))(eslint@9.32.0(jiti@2.6.1))(typescript@5.8.3)
@@ -917,23 +905,17 @@ packages:
   '@types/node@24.7.0':
     resolution: {integrity: sha512-IbKooQVqUBrlzWTi79E8Fw78l8k1RNtlDDNWsFZs7XonuQSJ8oNYfEeclhprUldXISRMLzBpILuKgPlIxm+/Yw==}
 
-<<<<<<< HEAD
-=======
   '@types/react-collapse@5.0.4':
     resolution: {integrity: sha512-tM5cVB6skGLneNYnRK2E3R56VOHguSeJQHslGPTIMC58ytL3oelT8L/l1onkwHGn5vSEs2BEq2Olzrur+YdliA==}
 
->>>>>>> c234069 (Landing Page design added and color theme fixed)
   '@types/react-dom@19.1.7':
     resolution: {integrity: sha512-i5ZzwYpqjmrKenzkoLM2Ibzt6mAsM7pxB6BCIouEVVmgiqaMj1TjaK7hnA36hbW5aZv20kx7Lw6hWzPWg0Rurw==}
     peerDependencies:
       '@types/react': ^19.0.0
 
-<<<<<<< HEAD
-=======
   '@types/react-scroll@1.8.10':
     resolution: {integrity: sha512-RD4Z7grbdNGOKwKnUBKar6zNxqaW3n8m9QSrfvljW+gmkj1GArb8AFBomVr6xMOgHPD3v1uV3BrIf01py57daQ==}
 
->>>>>>> c234069 (Landing Page design added and color theme fixed)
   '@types/react@19.1.9':
     resolution: {integrity: sha512-WmdoynAX8Stew/36uTSVMcLJJ1KRh6L3IZRx1PZ7qJtBqT3dYTgyDTx8H1qoRghErydW7xw9mSJ3wS//tCRpFA==}
 
@@ -1158,12 +1140,9 @@ packages:
     resolution: {integrity: sha512-9Kr/j4O16ISv8zBBhJoi4bXOYNTkFLOqSL3UDB0njXxCXNezjeyVrJyGOWtgfs/q2km1gwBcfH8q1yEGoMYunA==}
     engines: {node: '>=18'}
 
-<<<<<<< HEAD
-=======
   countup.js@2.9.0:
     resolution: {integrity: sha512-llqrvyXztRFPp6+i8jx25phHWcVWhrHO4Nlt0uAOSKHB8778zzQswa4MU3qKBvkXfJKftRYFJuVHez67lyKdHg==}
 
->>>>>>> c234069 (Landing Page design added and color theme fixed)
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
@@ -1457,13 +1436,8 @@ packages:
     resolution: {integrity: sha512-dKx12eRCVIzqCxFGplyFKJMPvLEWgmNtUrpTiJIR5u97zEhRG8ySrtboPHZXx7daLxQVrl643cTzbab2tkQjxg==}
     engines: {node: '>= 0.4'}
 
-<<<<<<< HEAD
-  framer-motion@12.23.12:
-    resolution: {integrity: sha512-6e78rdVtnBvlEVgu6eFEAgG9v3wLnYEboM8I5O5EXvfKC8gxGQB8wXJdhkMy10iVcn05jl6CNw7/HTsTCfwcWg==}
-=======
   framer-motion@12.23.24:
     resolution: {integrity: sha512-HMi5HRoRCTou+3fb3h9oTLyJGBxHfW+HnNE25tAXOvVx/IvwMHK0cx7IR4a2ZU6sh3IX1Z+4ts32PcYBOqka8w==}
->>>>>>> c234069 (Landing Page design added and color theme fixed)
     peerDependencies:
       '@emotion/is-prop-valid': '*'
       react: ^18.0.0 || ^19.0.0
@@ -1839,12 +1813,9 @@ packages:
   lodash.merge@4.6.2:
     resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
 
-<<<<<<< HEAD
-=======
   lodash.throttle@4.1.1:
     resolution: {integrity: sha512-wIkUCfVKpVsWo3JSZlc+8MB5it+2AN5W8J7YVMST30UrvcQNZ1Okbj+rbVniijTWE6FGYy4XJq/rHkas8qJMLQ==}
 
->>>>>>> c234069 (Landing Page design added and color theme fixed)
   lodash@4.17.21:
     resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
 
@@ -1909,13 +1880,8 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
-<<<<<<< HEAD
-  motion-dom@12.23.12:
-    resolution: {integrity: sha512-RcR4fvMCTESQBD/uKQe49D5RUeDOokkGRmz4ceaJKDBgHYtZtntC/s2vLvY38gqGaytinij/yi3hMcWVcEF5Kw==}
-=======
   motion-dom@12.23.23:
     resolution: {integrity: sha512-n5yolOs0TQQBRUFImrRfs/+6X4p3Q4n1dUEqt/H58Vx7OW6RF+foWEgmTVDhIWJIMXOuNNL0apKH2S16en9eiA==}
->>>>>>> c234069 (Landing Page design added and color theme fixed)
 
   motion-utils@12.23.6:
     resolution: {integrity: sha512-eAWoPgr4eFEOFfg2WjIsMoqJTW6Z8MTUCgn/GZ3VRpClWBdnbjryiA3ZSNLyxCTmCQx4RmYX6jX1iWHbenUPNQ==}
@@ -2127,8 +2093,6 @@ packages:
   queue-microtask@1.2.3:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
 
-<<<<<<< HEAD
-=======
   react-collapse@5.1.1:
     resolution: {integrity: sha512-k6cd7csF1o9LBhQ4AGBIdxB60SUEUMQDAnL2z1YvYNr9KoKr+nDkhN6FK7uGaBd/rYrYfrMpzpmJEIeHRYogBw==}
     peerDependencies:
@@ -2139,7 +2103,6 @@ packages:
     peerDependencies:
       react: '>= 16.3.0'
 
->>>>>>> c234069 (Landing Page design added and color theme fixed)
   react-dom@19.1.1:
     resolution: {integrity: sha512-Dlq/5LAZgF0Gaz6yiqZCf6VCcZs1ghAJyrsu84Q/GT0gV+mCxbfmKNoGRKBYMJ8IEdGPqu49YWXD02GCknEDkw==}
     peerDependencies:
@@ -2175,15 +2138,12 @@ packages:
       react-dom:
         optional: true
 
-<<<<<<< HEAD
-=======
   react-scroll@1.9.3:
     resolution: {integrity: sha512-xv7FXqF3k63aSLNu4/NjFvRNI0ge7DmmmsbeGarP7LZVAlJMSjUuW3dTtLxp1Afijyv0lS2qwC0GiFHvx1KBHQ==}
     peerDependencies:
       react: ^15.5.4 || ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^15.5.4 || ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
->>>>>>> c234069 (Landing Page design added and color theme fixed)
   react@19.1.1:
     resolution: {integrity: sha512-w8nqGImo45dmMIfljjMwOGtbmC/mk4CMYhWIicdSflH91J9TyCyczcPFXJzrZ/ZXcgGRFeP6BU0BEJTw6tZdfQ==}
     engines: {node: '>=0.10.0'}
@@ -3154,24 +3114,18 @@ snapshots:
     dependencies:
       undici-types: 7.14.0
 
-<<<<<<< HEAD
-=======
   '@types/react-collapse@5.0.4':
     dependencies:
       '@types/react': 19.1.9
 
->>>>>>> c234069 (Landing Page design added and color theme fixed)
   '@types/react-dom@19.1.7(@types/react@19.1.9)':
     dependencies:
       '@types/react': 19.1.9
 
-<<<<<<< HEAD
-=======
   '@types/react-scroll@1.8.10':
     dependencies:
       '@types/react': 19.1.9
 
->>>>>>> c234069 (Landing Page design added and color theme fixed)
   '@types/react@19.1.9':
     dependencies:
       csstype: 3.1.3
@@ -3462,11 +3416,8 @@ snapshots:
 
   cookie@1.0.2: {}
 
-<<<<<<< HEAD
-=======
   countup.js@2.9.0: {}
 
->>>>>>> c234069 (Landing Page design added and color theme fixed)
   cross-spawn@7.0.6:
     dependencies:
       path-key: 3.1.1
@@ -3885,15 +3836,9 @@ snapshots:
     dependencies:
       is-callable: 1.2.7
 
-<<<<<<< HEAD
-  framer-motion@12.23.12(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
-    dependencies:
-      motion-dom: 12.23.12
-=======
   framer-motion@12.23.24(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
     dependencies:
       motion-dom: 12.23.23
->>>>>>> c234069 (Landing Page design added and color theme fixed)
       motion-utils: 12.23.6
       tslib: 2.8.1
     optionalDependencies:
@@ -4245,11 +4190,8 @@ snapshots:
 
   lodash.merge@4.6.2: {}
 
-<<<<<<< HEAD
-=======
   lodash.throttle@4.1.1: {}
 
->>>>>>> c234069 (Landing Page design added and color theme fixed)
   lodash@4.17.21: {}
 
   log-update@6.1.0:
@@ -4307,11 +4249,7 @@ snapshots:
 
   mkdirp@3.0.1: {}
 
-<<<<<<< HEAD
-  motion-dom@12.23.12:
-=======
   motion-dom@12.23.23:
->>>>>>> c234069 (Landing Page design added and color theme fixed)
     dependencies:
       motion-utils: 12.23.6
 
@@ -4319,11 +4257,7 @@ snapshots:
 
   motion@12.23.12(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
     dependencies:
-<<<<<<< HEAD
-      framer-motion: 12.23.12(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-=======
       framer-motion: 12.23.24(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
->>>>>>> c234069 (Landing Page design added and color theme fixed)
       tslib: 2.8.1
     optionalDependencies:
       react: 19.1.1
@@ -4458,8 +4392,6 @@ snapshots:
 
   queue-microtask@1.2.3: {}
 
-<<<<<<< HEAD
-=======
   react-collapse@5.1.1(react@19.1.1):
     dependencies:
       react: 19.1.1
@@ -4469,7 +4401,6 @@ snapshots:
       countup.js: 2.9.0
       react: 19.1.1
 
->>>>>>> c234069 (Landing Page design added and color theme fixed)
   react-dom@19.1.1(react@19.1.1):
     dependencies:
       react: 19.1.1
@@ -4497,8 +4428,6 @@ snapshots:
     optionalDependencies:
       react-dom: 19.1.1(react@19.1.1)
 
-<<<<<<< HEAD
-=======
   react-scroll@1.9.3(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
     dependencies:
       lodash.throttle: 4.1.1
@@ -4506,7 +4435,6 @@ snapshots:
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
->>>>>>> c234069 (Landing Page design added and color theme fixed)
   react@19.1.1: {}
 
   reflect.getprototypeof@1.0.10:
