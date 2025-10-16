@@ -36,7 +36,7 @@ const FileReceive: React.FC = () => {
 		} catch (error: unknown) {
 			if (axios.isAxiosError(error)) {
 				console.error(error.response?.data?.message);
-				toast.error(error.response?.data?.message || 'Failed to download file');
+				toast.error(error.response?.data?.message || 'Failed to fetch files');
 			} else {
 				console.error(error);
 				toast.error('An unexpected error occurred');
