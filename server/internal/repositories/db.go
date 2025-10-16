@@ -20,6 +20,8 @@ func ConnectDatabase() {
 	// Run migrations
 	err = db.AutoMigrate(
 		&models.User{},
+		&models.Transfer{},
+		&models.File{},
 	)
 	if err != nil {
 		log.Fatal("Migration failed:", err)
