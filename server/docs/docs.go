@@ -16,69 +16,8 @@ const docTemplate = `{
     "basePath": "{{.BasePath}}",
     "paths": {
         "/api/v1/files": {
-            "get": {
-                "description": "List all uploaded files with their download links",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Files"
-                ],
-                "summary": "List all uploaded files",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Payload"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Payload"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/files/download/{id}": {
-            "get": {
-                "description": "Download a file by its ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Files"
-                ],
-                "summary": "Download a file",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "File ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Payload"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/utils.Payload"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/files/upload": {
             "post": {
-                "description": "Upload files and get their unique download links",
+                "description": "Upload multiple files (≤100 MB total) and receive a share token",
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -88,7 +27,7 @@ const docTemplate = `{
                 "tags": [
                     "Files"
                 ],
-                "summary": "Upload one or more files",
+                "summary": "Upload one or more files anonymously",
                 "parameters": [
                     {
                         "type": "file",
@@ -107,6 +46,95 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Payload"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/share/{token}": {
+            "get": {
+                "description": "Fetch metadata of all files in a transfer using its share token",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Files"
+                ],
+                "summary": "Retrieve shared file details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Share token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Payload"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Payload"
+                        }
+                    },
+                    "410": {
+                        "description": "Gone",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Payload"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/share/{token}/download/{index}": {
+            "get": {
+                "description": "Download the file corresponding to the given index in the anonymous transfer",
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "Files"
+                ],
+                "summary": "Download a specific file from a shared transfer",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Share token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "File index",
+                        "name": "index",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Payload"
+                        }
+                    },
+                    "410": {
+                        "description": "Gone",
                         "schema": {
                             "$ref": "#/definitions/utils.Payload"
                         }
