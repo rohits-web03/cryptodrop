@@ -38,12 +38,17 @@ func SetupRouter() http.Handler {
 	authMux.HandleFunc("/logout", handlers.Logout)
 
 	fileMux := http.NewServeMux()
-	fileMux.HandleFunc("/", handlers.ListFiles)
-	fileMux.HandleFunc("/upload", handlers.UploadFile)
-	fileMux.HandleFunc("/download/{id}", handlers.DownloadFile)
+	fileMux.HandleFunc("/", handlers.UploadFiles)
+
+	shareMux := http.NewServeMux()
+	shareMux.HandleFunc("/{token}", handlers.GetSharedFiles)
+	shareMux.HandleFunc("/{token}/download/{index}", handlers.DownloadSharedFile)
 
 	// Mount fileMux under /files
 	apiMux.Handle("/files/", http.StripPrefix("/files", fileMux))
+
+	// Mount shareMux under /share
+	apiMux.Handle("/share/", http.StripPrefix("/share", shareMux))
 
 	// Mount authMux under /auth
 	apiMux.Handle("/auth/", http.StripPrefix("/auth", authMux))

@@ -8,28 +8,30 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/rohits-web03/cryptodrop/internal/models"
+	"github.com/rohits-web03/cryptodrop/internal/repositories"
 	"github.com/rohits-web03/cryptodrop/internal/utils"
+	"gorm.io/gorm"
 )
 
-var files = make(map[string]models.File) // temporary in-memory store
-
-// POST /api/v1/files/upload
+// POST /api/v1/files
 // UploadFile godoc
-// @Summary Upload one or more files
-// @Description Upload files and get their unique download links
+// @Summary Upload one or more files anonymously
+// @Description Upload multiple files (≤100 MB total) and receive a share token
 // @Tags Files
 // @Accept multipart/form-data
 // @Produce json
 // @Param files formData file true "Files to upload" style(form) explode(true)
 // @Success 200 {object} utils.Payload
 // @Failure 400 {object} utils.Payload
-// @Router /api/v1/files/upload [post]
-func UploadFile(w http.ResponseWriter, r *http.Request) {
-	if err := r.ParseMultipartForm(100 << 20); err != nil { // 100 MB total max
+// @Router /api/v1/files [post]
+func UploadFiles(w http.ResponseWriter, r *http.Request) {
+	const maxUploadSize = 100 << 20 // 100 MB
+	if err := r.ParseMultipartForm(maxUploadSize); err != nil {
 		utils.JSONResponse(w, http.StatusBadRequest, utils.Payload{
 			Success: false,
-			Message: "Invalid file upload",
+			Message: "Invalid file upload form",
 		})
 		return
 	}
@@ -43,106 +45,100 @@ func UploadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	uploadDir := "uploads"
-	os.MkdirAll(uploadDir, os.ModePerm)
-
-	var uploadedFiles []map[string]interface{}
-
-	for _, handler := range formFiles {
-		src, err := handler.Open()
-		if err != nil {
-			continue // skip any failed file, don’t abort entire upload
-		}
-		defer src.Close()
-
-		id := utils.GenerateID()
-		dstPath := filepath.Join(uploadDir, id.String()+"_"+handler.Filename)
-
-		dst, err := os.Create(dstPath)
-		if err != nil {
-			continue
-		}
-		defer dst.Close()
-
-		size, err := io.Copy(dst, src)
-		if err != nil {
-			continue
-		}
-
-		files[id.String()] = models.File{
-			ID:         id,
-			Filename:   handler.Filename,
-			Path:       dstPath,
-			Size:       size,
-			UploadedAt: time.Now(),
-			UpdatedAt:  time.Now(),
-		}
-
-		fileURL := fmt.Sprintf("http://localhost:8080/api/v1/files/download/%s", id.String())
-		uploadedFiles = append(uploadedFiles, map[string]interface{}{
-			"id":       id.String(),
-			"filename": handler.Filename,
-			"size":     size,
-			"url":      fileURL,
-		})
+	// Calculate total size
+	var totalSize int64
+	for _, f := range formFiles {
+		totalSize += f.Size
 	}
-
-	utils.JSONResponse(w, http.StatusOK, utils.Payload{
-		Success: true,
-		Message: "Files uploaded successfully",
-		Data:    uploadedFiles,
-	})
-}
-
-// GET /api/v1/files
-// ListFiles godoc
-// @Summary List all uploaded files
-// @Description List all uploaded files with their download links
-// @Tags Files
-// @Produce json
-// @Success 200 {object} utils.Payload
-// @Failure 400 {object} utils.Payload
-// @Router /api/v1/files [get]
-func ListFiles(w http.ResponseWriter, r *http.Request) {
-	var allFiles []map[string]interface{}
-
-	for id, f := range files {
-		allFiles = append(allFiles, map[string]interface{}{
-			"id":       id,
-			"filename": f.Filename,
-			"size":     f.Size,
-			"url":      fmt.Sprintf("http://localhost:8080/api/v1/files/download/%s", id),
-		})
-	}
-
-	utils.JSONResponse(w, http.StatusOK, utils.Payload{
-		Success: true,
-		Message: "Files listed successfully",
-		Data:    allFiles,
-	})
-}
-
-// GET /api/v1/files/download/{id}
-// DownloadFile godoc
-// @Summary Download a file
-// @Description Download a file by its ID
-// @Tags Files
-// @Produce json
-// @Param id path string true "File ID"
-// @Success 200 {object} utils.Payload
-// @Failure 400 {object} utils.Payload
-// @Router /api/v1/files/download/{id} [get]
-func DownloadFile(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
-	file, ok := files[id]
-	if !ok {
-		utils.JSONResponse(w, http.StatusNotFound, utils.Payload{
+	if totalSize > maxUploadSize {
+		utils.JSONResponse(w, http.StatusBadRequest, utils.Payload{
 			Success: false,
-			Message: "File not found",
+			Message: "Total file size exceeds 100 MB limit",
 		})
 		return
 	}
 
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", file.Filename))
-	http.ServeFile(w, r, file.Path)
+	// Create uploads directory if missing
+	uploadDir := "uploads"
+	_ = os.MkdirAll(uploadDir, os.ModePerm)
+
+	// Generate transfer token
+	token, err := utils.GenerateSecureToken(32) // 256-bit token
+	if err != nil {
+		utils.JSONResponse(w, http.StatusInternalServerError, utils.Payload{
+			Success: false,
+			Message: "Failed to create transfer token",
+		})
+		return
+	}
+
+	// Begin DB transaction
+	db := repositories.DB
+	err = db.Transaction(func(tx *gorm.DB) error {
+		// Create transfer record
+		transfer := models.Transfer{
+			Token:       token,
+			ExpiresAt:   time.Now().Add(1 * time.Hour),
+			IsAnonymous: true,
+			TotalSize:   totalSize,
+		}
+
+		if err := tx.Create(&transfer).Error; err != nil {
+			return err
+		}
+
+		// Store each file
+		for i, handler := range formFiles {
+			src, err := handler.Open()
+			if err != nil {
+				continue
+			}
+			defer src.Close()
+
+			fileID := uuid.New()
+			dstPath := filepath.Join(uploadDir, fileID.String()+"_"+handler.Filename)
+
+			dst, err := os.Create(dstPath)
+			if err != nil {
+				continue
+			}
+			defer dst.Close()
+
+			size, err := io.Copy(dst, src)
+			if err != nil {
+				continue
+			}
+
+			file := models.File{
+				TransferID: transfer.ID,
+				Filename:   handler.Filename,
+				Path:       dstPath,
+				Size:       size,
+				Index:      i,
+			}
+			if err := tx.Create(&file).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		utils.JSONResponse(w, http.StatusInternalServerError, utils.Payload{
+			Success: false,
+			Message: "Failed to store files",
+		})
+		return
+	}
+
+	shareLink := fmt.Sprintf("http://localhost:8080/api/v1/share/%s", token)
+	utils.JSONResponse(w, http.StatusOK, utils.Payload{
+		Success: true,
+		Message: "Files uploaded successfully",
+		Data: map[string]interface{}{
+			"shareLink": shareLink,
+			"expiresIn": "1h",
+		},
+	})
 }
