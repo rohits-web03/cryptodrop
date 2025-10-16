@@ -1,11 +1,18 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Upload, Trash2 } from 'lucide-react';
+import axios from 'axios';
+import { motion } from 'framer-motion';
+import { Upload, Trash2, Copy } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import React from 'react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 const FileUpload: React.FC = () => {
 	const [files, setFiles] = useState<File[]>([]);
+	const [shareCode, setShareCode] = useState<string>('');
+	const [expiresIn, setExpiresIn] = useState<string>('');
+	const [isUploading, setIsUploading] = useState<boolean>(false);
 
 	const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const selectedFiles = Array.from(e.target.files || []);
@@ -23,6 +30,28 @@ const FileUpload: React.FC = () => {
 	const handleRemove = (index: number) => {
 		setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
 	};
+
+	const handleUpload = async () => {
+		try {
+			setIsUploading(true);
+			const formData = new FormData();
+			files.forEach((file) => formData.append('files', file));
+			const response = await axios.post(
+				`${import.meta.env.VITE_API_BASE_URL}/api/v1/files/`,
+				formData
+			);
+			setShareCode(response?.data?.data?.shareLink?.split('share/')?.[1]);
+			setExpiresIn(response?.data?.data?.expiresIn);
+			toast.success('Files uploaded successfully');
+			setFiles([]);
+		} catch (error) {
+			console.error(error);
+			toast.error('Failed to upload files');
+		} finally {
+			setIsUploading(false);
+		}
+	};
+
 	return (
 		<div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 to-gray-700">
 			<header className="mb-8 text-center">
@@ -70,6 +99,14 @@ const FileUpload: React.FC = () => {
 							))}
 						</div>
 						<Button
+							onClick={handleUpload}
+							className="w-full bg-gray-500 hover:bg-gray-400 text-white rounded-full cursor-pointer"
+							disabled={isUploading}
+						>
+							{isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+							{isUploading ? 'Uploading...' : 'Upload selected files'}
+						</Button>
+						<Button
 							onClick={() => setFiles([])}
 							className="w-full bg-gray-500 hover:bg-gray-400 text-white rounded-full cursor-pointer"
 						>
@@ -78,6 +115,39 @@ const FileUpload: React.FC = () => {
 					</div>
 				)}
 			</div>
+			{shareCode && (
+				<motion.div
+					initial={{ opacity: 0, y: -10 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ duration: 0.3, ease: 'easeOut' }}
+					className="w-full max-w-md mx-auto mt-6 p-5 bg-gray-800 rounded-2xl shadow-xl border border-gray-600"
+				>
+					<h2 className="text-2xl font-semibold text-white mb-2 text-center">
+						Share Your Files
+					</h2>
+					<p className="text-gray-400 text-base mb-4 text-center">
+						Copy this code and share it with anyone you want. The code expires in{' '}
+						{expiresIn}.
+					</p>
+
+					<div className="flex items-center justify-between bg-gray-700 rounded-lg px-4 py-3 mb-3">
+						<span title={shareCode} className="text-white truncate text-base">
+							{shareCode}
+						</span>
+						<Button
+							variant="ghost"
+							size="icon"
+							className="bg-gray-600 hover:bg-gray-500 rounded-full cursor-pointer"
+							onClick={() => {
+								navigator.clipboard.writeText(shareCode);
+								toast.success('Code copied to clipboard');
+							}}
+						>
+							<Copy className="text-white" size={20} />
+						</Button>
+					</div>
+				</motion.div>
+			)}
 		</div>
 	);
 };

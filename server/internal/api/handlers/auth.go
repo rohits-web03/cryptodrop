@@ -17,7 +17,10 @@ import (
 // POST /auth/sign-up
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		utils.JSONResponse(w, http.StatusMethodNotAllowed, false, "Method not allowed")
+		utils.JSONResponse(w, http.StatusMethodNotAllowed, utils.Payload{
+			Success: false,
+			Message: "Method not allowed",
+		})
 		return
 	}
 
@@ -32,19 +35,28 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	dec := json.NewDecoder(r.Body)
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(&input); err != nil {
-		utils.JSONResponse(w, http.StatusBadRequest, false, "Invalid input")
+		utils.JSONResponse(w, http.StatusBadRequest, utils.Payload{
+			Success: false,
+			Message: "Invalid input",
+		})
 		return
 	}
 
 	if input.Email == "" || input.Username == "" || input.Password == "" {
-		utils.JSONResponse(w, http.StatusBadRequest, false, "Invalid input")
+		utils.JSONResponse(w, http.StatusBadRequest, utils.Payload{
+			Success: false,
+			Message: "Invalid input",
+		})
 		return
 	}
 
 	// Check if username already exists
 	var existingUser models.User
 	if err := repositories.DB.Where("username = ?", input.Username).First(&existingUser).Error; err == nil {
-		utils.JSONResponse(w, http.StatusBadRequest, false, "Username is already taken")
+		utils.JSONResponse(w, http.StatusBadRequest, utils.Payload{
+			Success: false,
+			Message: "Username is already taken",
+		})
 		return
 	}
 
@@ -53,13 +65,19 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	switch err {
 	case nil: // email exists
-		utils.JSONResponse(w, http.StatusBadRequest, false, "User already exists with this email")
+		utils.JSONResponse(w, http.StatusBadRequest, utils.Payload{
+			Success: false,
+			Message: "User already exists with this email",
+		})
 		return
 
 	case gorm.ErrRecordNotFound: // new user, create account
 		hashedPassword, hashErr := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 		if hashErr != nil {
-			utils.JSONResponse(w, http.StatusInternalServerError, false, "Failed to hash password")
+			utils.JSONResponse(w, http.StatusInternalServerError, utils.Payload{
+				Success: false,
+				Message: "Failed to hash password",
+			})
 			return
 		}
 
@@ -70,16 +88,25 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if createErr := repositories.DB.Create(&newUser).Error; createErr != nil {
-			utils.JSONResponse(w, http.StatusInternalServerError, false, "Database insert failed")
+			utils.JSONResponse(w, http.StatusInternalServerError, utils.Payload{
+				Success: false,
+				Message: "Database insert failed",
+			})
 			return
 		}
 
 	default: // some other DB error
-		utils.JSONResponse(w, http.StatusInternalServerError, false, "Database query failed")
+		utils.JSONResponse(w, http.StatusInternalServerError, utils.Payload{
+			Success: false,
+			Message: "Database query failed",
+		})
 		return
 	}
 
-	utils.JSONResponse(w, http.StatusCreated, true, "User registered successfully")
+	utils.JSONResponse(w, http.StatusCreated, utils.Payload{
+		Success: true,
+		Message: "User registered successfully",
+	})
 }
 
 // JWT Claims struct
@@ -92,7 +119,10 @@ type Claims struct {
 // POST /auth/login
 func LoginUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		utils.JSONResponse(w, http.StatusMethodNotAllowed, false, "Method not allowed")
+		utils.JSONResponse(w, http.StatusMethodNotAllowed, utils.Payload{
+			Success: false,
+			Message: "Method not allowed",
+		})
 		return
 	}
 
@@ -105,12 +135,18 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 	dec := json.NewDecoder(r.Body)
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(&input); err != nil {
-		utils.JSONResponse(w, http.StatusBadRequest, false, "Invalid input")
+		utils.JSONResponse(w, http.StatusBadRequest, utils.Payload{
+			Success: false,
+			Message: "Invalid input",
+		})
 		return
 	}
 
 	if input.Username == "" || input.Password == "" {
-		utils.JSONResponse(w, http.StatusBadRequest, false, "Invalid input")
+		utils.JSONResponse(w, http.StatusBadRequest, utils.Payload{
+			Success: false,
+			Message: "Invalid input",
+		})
 		return
 	}
 
@@ -120,23 +156,35 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 	case nil:
 		// user found
 	case gorm.ErrRecordNotFound:
-		utils.JSONResponse(w, http.StatusUnauthorized, false, "Invalid credentials")
+		utils.JSONResponse(w, http.StatusUnauthorized, utils.Payload{
+			Success: false,
+			Message: "Invalid credentials",
+		})
 		return
 	default:
-		utils.JSONResponse(w, http.StatusInternalServerError, false, "Database error")
+		utils.JSONResponse(w, http.StatusInternalServerError, utils.Payload{
+			Success: false,
+			Message: "Database error",
+		})
 		return
 	}
 
 	// Compare password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
-		utils.JSONResponse(w, http.StatusUnauthorized, false, "Invalid credentials")
+		utils.JSONResponse(w, http.StatusUnauthorized, utils.Payload{
+			Success: false,
+			Message: "Invalid credentials",
+		})
 		return
 	}
 
 	// Load JWT secret
 	secret := config.Envs.JWTSecret
 	if secret == "" {
-		utils.JSONResponse(w, http.StatusInternalServerError, false, "No config found for JWT")
+		utils.JSONResponse(w, http.StatusInternalServerError, utils.Payload{
+			Success: false,
+			Message: "No config found for JWT",
+		})
 		return
 	}
 
@@ -155,7 +203,10 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString([]byte(secret))
 	if err != nil {
-		utils.JSONResponse(w, http.StatusInternalServerError, false, "Failed to create token")
+		utils.JSONResponse(w, http.StatusInternalServerError, utils.Payload{
+			Success: false,
+			Message: "Failed to create token",
+		})
 		return
 	}
 
@@ -182,7 +233,10 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		SameSite: sameSite,
 	})
 
-	utils.JSONResponse(w, http.StatusOK, true, "Login successful")
+	utils.JSONResponse(w, http.StatusOK, utils.Payload{
+		Success: true,
+		Message: "Login successful",
+	})
 }
 
 // POST /api/auth/logout
@@ -200,5 +254,8 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteLaxMode,
 	})
 
-	utils.JSONResponse(w, http.StatusOK, true, "Logged out successfully")
+	utils.JSONResponse(w, http.StatusOK, utils.Payload{
+		Success: true,
+		Message: "Logged out successfully",
+	})
 }

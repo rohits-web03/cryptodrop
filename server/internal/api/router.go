@@ -5,6 +5,9 @@ import (
 	"log"
 	"net/http"
 
+	_ "github.com/rohits-web03/cryptodrop/docs"
+	httpSwagger "github.com/swaggo/http-swagger"
+
 	"github.com/rohits-web03/cryptodrop/internal/api/handlers"
 	"github.com/rohits-web03/cryptodrop/internal/config"
 	"github.com/rs/cors"
@@ -34,6 +37,19 @@ func SetupRouter() http.Handler {
 	authMux.HandleFunc("/login", handlers.LoginUser)
 	authMux.HandleFunc("/logout", handlers.Logout)
 
+	fileMux := http.NewServeMux()
+	fileMux.HandleFunc("/", handlers.UploadFiles)
+
+	shareMux := http.NewServeMux()
+	shareMux.HandleFunc("/{token}", handlers.GetSharedFiles)
+	shareMux.HandleFunc("/{token}/download/{index}", handlers.DownloadSharedFile)
+
+	// Mount fileMux under /files
+	apiMux.Handle("/files/", http.StripPrefix("/files", fileMux))
+
+	// Mount shareMux under /share
+	apiMux.Handle("/share/", http.StripPrefix("/share", shareMux))
+
 	// Mount authMux under /auth
 	apiMux.Handle("/auth/", http.StripPrefix("/auth", authMux))
 
@@ -46,6 +62,9 @@ func SetupRouter() http.Handler {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		fmt.Fprintf(w, "OK")
 	})
+
+	// Swagger documentation
+	mainMux.HandleFunc("/docs/", httpSwagger.WrapHandler)
 
 	log.Println("Router initialized with core and API routes.")
 	return handler

@@ -44,3 +44,6 @@ Thumbs.db
 # Coverage / testing
 *.coverprofile
 coverage.out
+
+# Temporary files
+uploads/

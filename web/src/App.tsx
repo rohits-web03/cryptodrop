@@ -19,7 +19,7 @@ function App() {
 					<Route path="receive" element={<FileReceive />} />
 				</Route>
 			</Routes>
-			<Toaster position="top-right" richColors closeButton />
+			<Toaster position="top-right" richColors />
 		</BrowserRouter>
 	);
 }
