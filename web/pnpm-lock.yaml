@@ -96,6 +96,9 @@ importers:
       '@types/react-collapse':
         specifier: ^5.0.4
         version: 5.0.4
+      '@types/react-dom':
+        specifier: ^19.1.6
+        version: 19.1.7(@types/react@19.1.9)
       '@types/react-scroll':
         specifier: ^1.8.10
         version: 1.8.10
