@@ -19,7 +19,7 @@ const Pricing = () => {
 							whileInView={{ opacity: 1, y: 0 }}
 							viewport={{ once: true, amount: 0.5 }}
 							transition={{ duration: 0.5, ease: 'easeOut' }}
-							className="h3 max-lg:h4 max-md:h5 z-3 relative mx-auto mb-14 max-w-lg text-center text-p4 max-md:mb-11 max-sm:max-w-sm"
+							className="h3 max-lg:h4 max-md:h5 z-3 relative mx-auto mb-14 max-w-lg text-center text-p4 max-md:mb-11 max-sm:max-w-sm px-4"
 						>
 							Flexible pricing for teams of all sizes
 						</motion.h3>
@@ -29,7 +29,7 @@ const Pricing = () => {
 							whileInView={{ opacity: 1, scale: 1 }}
 							viewport={{ once: true, amount: 0.5 }}
 							transition={{ duration: 0.4, delay: 0.1, ease: 'easeOut' }}
-							className="relative z-4 mx-auto flex w-[375px] rounded-3xl border-[3px] border-s4/25 bg-s1/50 p-2 backdrop-blur-[6px] max-md:w-[310px]"
+							className="relative z-4 mx-auto flex w-[375px] rounded-3xl border-[3px] border-s4/25 bg-s1/50 p-2 backdrop-blur-[6px] max-md:w-[310px] max-sm:w-[280px]"
 						>
 							<button
 								className={clsx('pricing-head_btn', monthly && 'text-p4')}
@@ -75,8 +75,8 @@ const Pricing = () => {
 						</motion.div>
 					</div>
 
-					{/* Pricing section - centered for 2 plans */}
-					<div className="scroll-hide relative z-2 -mt-12 flex items-start justify-center gap-8 max-xl:gap-5 max-xl:overflow-auto max-xl:pt-6">
+					{/* Pricing section - responsive layout */}
+					<div className="relative z-2 -mt-12 flex flex-col items-center justify-center gap-8 px-4 max-xl:gap-5 max-xl:pt-6 md:flex-row md:items-start">
 						{plans.map((plan, index) => (
 							<motion.div
 								key={plan.id}
@@ -89,7 +89,7 @@ const Pricing = () => {
 									ease: 'easeOut',
 								}}
 								whileHover={{ y: -8 }}
-								className="pricing-plan_first pricing-plan_last pricing-plan_odd pricing-plan_even relative border-2 p-7 max-xl:min-w-80 max-lg:rounded-3xl xl:w-[460px]"
+								className="pricing-plan_first pricing-plan_last pricing-plan_odd pricing-plan_even relative w-full border-2 p-7 max-w-[460px] max-lg:rounded-3xl md:w-[460px]"
 							>
 								{index === 1 && (
 									<motion.div
@@ -112,7 +112,7 @@ const Pricing = () => {
 									}}
 									className={clsx(
 										'absolute left-0 right-0 z-2 flex items-center justify-center',
-										index === 1 ? '-top-6' : '-top-6 xl:-top-11'
+										index === 1 ? '-top-6 max-md:-top-4' : '-top-6 max-md:-top-4 xl:-top-11'
 									)}
 								>
 									<img
@@ -120,7 +120,7 @@ const Pricing = () => {
 										alt={plan.title}
 										className={clsx(
 											'object-contain drop-shadow-2xl',
-											index === 1 ? 'size-[120px]' : 'size-[88px]'
+											index === 1 ? 'size-[120px] max-md:size-[100px]' : 'size-[88px] max-md:size-[70px]'
 										)}
 									/>
 								</motion.div>
@@ -128,7 +128,7 @@ const Pricing = () => {
 								<div
 									className={clsx(
 										'relative flex flex-col items-center',
-										index === 1 ? 'pt-24' : 'pt-12'
+										index === 1 ? 'pt-24 max-md:pt-20' : 'pt-12 max-md:pt-10'
 									)}
 								>
 									<motion.div
@@ -137,7 +137,7 @@ const Pricing = () => {
 										viewport={{ once: true }}
 										transition={{ duration: 0.4, delay: index * 0.15 + 0.3 }}
 										className={clsx(
-											'small-2 rounded-20 relative z-2 mx-auto mb-6 border-2 px-4 py-1.5 uppercase',
+											'small-2 rounded-20 relative z-2 mx-auto mb-6 border-2 px-4 py-1.5 uppercase max-md:text-xs max-md:mb-4',
 											index === 1 ? 'border-p3 text-p3' : 'border-p1 text-p1'
 										)}
 									>
@@ -153,7 +153,7 @@ const Pricing = () => {
 									>
 										<div
 											className={clsx(
-												'h-num flex items-start',
+												'h-num flex items-start max-md:text-5xl',
 												index === 1 ? 'text-p3' : 'text-p4'
 											)}
 										>
@@ -170,7 +170,7 @@ const Pricing = () => {
 												preserveValue
 											/>
 										</div>
-										<div className="small-1 relative top-3 ml-1 uppercase">
+										<div className="small-1 relative top-3 ml-1 uppercase max-md:text-xs max-md:top-2">
 											/ mo
 										</div>
 									</motion.div>
@@ -182,7 +182,7 @@ const Pricing = () => {
 									viewport={{ once: true }}
 									transition={{ duration: 0.4, delay: index * 0.15 + 0.5 }}
 									className={clsx(
-										'body-1 relative z-2 mb-10 w-full border-b-s2 pb-9 text-center text-p4',
+										'body-1 relative z-2 mb-10 w-full border-b-s2 pb-9 text-center text-p4 max-md:mb-6 max-md:pb-6 max-md:text-sm',
 										index === 1 && 'border-b'
 									)}
 								>
@@ -194,7 +194,7 @@ const Pricing = () => {
 									whileInView={{ opacity: 1 }}
 									viewport={{ once: true }}
 									transition={{ duration: 0.5, delay: index * 0.15 + 0.6 }}
-									className="mx-auto space-y-4 xl:px-7"
+									className="mx-auto space-y-4 xl:px-7 max-md:space-y-3"
 								>
 									{plan.features.map((feature, featureIndex) => (
 										<motion.li
@@ -206,14 +206,14 @@ const Pricing = () => {
 												duration: 0.3,
 												delay: index * 0.15 + 0.7 + featureIndex * 0.05,
 											}}
-											className="relative flex items-center gap-5"
+											className="relative flex items-center gap-5 max-md:gap-3"
 										>
 											<img
 												src={'/images/check.png'}
 												alt="check"
-												className="size-10 object-contain"
+												className="size-10 object-contain max-md:size-8 flex-shrink-0"
 											/>
-											<p className="flex-1">{feature}</p>
+											<p className="flex-1 max-md:text-sm">{feature}</p>
 										</motion.li>
 									))}
 								</motion.ul>
@@ -223,7 +223,7 @@ const Pricing = () => {
 									whileInView={{ opacity: 1, y: 0 }}
 									viewport={{ once: true }}
 									transition={{ duration: 0.4, delay: index * 0.15 + 0.8 }}
-									className="mt-10 flex w-full justify-center"
+									className="mt-10 flex w-full justify-center max-md:mt-6"
 								>
 									<Button icon={plan.icon}>Get Started</Button>
 								</motion.div>
@@ -234,7 +234,7 @@ const Pricing = () => {
 										whileInView={{ opacity: 1 }}
 										viewport={{ once: true }}
 										transition={{ duration: 0.4, delay: index * 0.15 + 0.9 }}
-										className="small-compact mt-9 text-center text-p3 before:mx-2.5 before:content-['-'] after:mx-2.5 after:content-['-']"
+										className="small-compact mt-9 text-center text-p3 before:mx-2.5 before:content-['-'] after:mx-2.5 after:content-['-'] max-md:mt-6 max-md:text-xs"
 									>
 										Limited time offer
 									</motion.p>
