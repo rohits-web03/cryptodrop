@@ -1,11 +1,10 @@
 version: "3.9"
 services:
   server:
-    build:
-      context: ./server
-      dockerfile: Dockerfile
+    image: ghcr.io/rohits-web03/cryptodrop-server:latest
+    container_name: cryptodrop-server
     env_file:
-      - ./server/.env
+      - .env.server
     ports:
       - "8080:8080"
     networks:
@@ -13,15 +12,15 @@ services:
 
   web:
     build:
-      context: ./web
+      context: .
       dockerfile: Dockerfile
       target: development
     env_file:
-      - ./web/.env
+      - .env.web
     ports:
       - "5173:5173"
     volumes:
-      - ./web:/app
+      - .:/app
       - /app/node_modules
     depends_on:
       - server
