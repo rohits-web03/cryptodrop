@@ -105,7 +105,11 @@ const Login: React.FC = () => {
 
 						<Button
 							type="button"
-							onClick={() => toast.info('Redirecting to Google login...')}
+							onClick={() => {
+								toast.info('Redirecting to Google login...');
+								window.location.href =
+									'http://localhost:8080/api/v1/auth/google/login';
+							}}
 							variant="outline"
 							className="w-full flex items-center justify-center gap-2 border border-gray-400 text-gray-300 hover:bg-white/20 hover:text-white cursor-pointer"
 						>
