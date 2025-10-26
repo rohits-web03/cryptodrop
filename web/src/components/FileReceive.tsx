@@ -1,44 +1,83 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { formatFileSize } from '@/lib/utils';
 import { receiveSchema } from '@/schema/file';
 import { type File, type ReceiveInput } from '@/types/file';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Download, Eye, File as FileIcon, Trash2 } from 'lucide-react';
+import axios from 'axios';
+import { Download, File as FileIcon, Loader2 } from 'lucide-react';
 import React from 'react';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 
 const FileReceive: React.FC = () => {
 	const [receivedFiles, setreceivedFiles] = useState<File[]>([]);
+	const shareCode = useRef<string>('');
 	const {
 		register,
 		handleSubmit,
-		formState: { errors, isSubmitting },
 		reset,
+		formState: { errors, isSubmitting },
 	} = useForm<ReceiveInput>({
 		resolver: zodResolver(receiveSchema),
-		defaultValues: { sharingLink: '' },
+		defaultValues: { sharingCode: '' },
 	});
 
-	const onSubmit = ({ sharingLink }: ReceiveInput) => {
-		setreceivedFiles([
-			{ name: 'File1.pdf', size: '1MB' },
-			{ name: 'File2.txt', size: '2KB' },
-		]);
-		console.log(`Fetching files from: ${sharingLink}`);
-		reset();
+	const onSubmit = async ({ sharingCode }: ReceiveInput) => {
+		try {
+			shareCode.current = sharingCode;
+			const response = await axios.get(
+				`${import.meta.env.VITE_API_BASE_URL}/api/v1/share/${sharingCode}`
+			);
+			setreceivedFiles(response?.data?.data?.files);
+			reset();
+			toast.success('Files received successfully');
+		} catch (error: unknown) {
+			if (axios.isAxiosError(error)) {
+				console.error(error.response?.data?.message);
+				toast.error(error.response?.data?.message || 'Failed to fetch files');
+			} else {
+				console.error(error);
+				toast.error('An unexpected error occurred');
+			}
+		}
 	};
 
-	const handleDownload = (fileName: string) => {
-		alert(`Downloading ${fileName}...`);
-	};
+	const handleDownload = async (index: number) => {
+		try {
+			const response = await axios.get(
+				`${import.meta.env.VITE_API_BASE_URL}/api/v1/share/${shareCode.current}/download/${index}`,
+				{
+					responseType: 'blob',
+				}
+			);
 
-	const handlePreview = (fileName: string) => {
-		alert(`Previewing ${fileName}...`);
-	};
+			const contentDisposition = response.headers['content-disposition'];
+			let filename = 'file';
 
-	const handleRemove = (index: number) => {
-		setreceivedFiles((prev) => prev.filter((_, i) => i !== index));
+			if (contentDisposition) {
+				const match = contentDisposition.match(/filename="(.+)"/);
+				if (match?.[1]) filename = match[1];
+			}
+
+			const url = window.URL.createObjectURL(new Blob([response.data]));
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = filename;
+			document.body.appendChild(a);
+			a.click();
+			a.remove();
+			window.URL.revokeObjectURL(url);
+		} catch (error: unknown) {
+			if (axios.isAxiosError(error)) {
+				console.error(error.response?.data?.message);
+				toast.error(error.response?.data?.message || 'Failed to download file');
+			} else {
+				console.error(error);
+				toast.error('An unexpected error occurred');
+			}
+		}
 	};
 
 	return (
@@ -56,8 +95,8 @@ const FileReceive: React.FC = () => {
 					<div className="flex items-center gap-3">
 						<Input
 							type="text"
-							placeholder="Enter Sharing Link"
-							{...register('sharingLink')}
+							placeholder="Enter sharing code"
+							{...register('sharingCode')}
 							className="bg-gray-700 text-white border-none placeholder-gray-400 flex-1"
 						/>
 						<Button
@@ -65,19 +104,22 @@ const FileReceive: React.FC = () => {
 							type="submit"
 							disabled={isSubmitting}
 						>
+							{isSubmitting ? (
+								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+							) : null}
 							{isSubmitting ? 'Receiving...' : 'Receive'}
 						</Button>
 					</div>
-					{errors.sharingLink && (
+					{errors.sharingCode && (
 						<p className="text-sm text-red-500 text-left mt-1">
-							{errors.sharingLink.message}
+							{errors.sharingCode.message}
 						</p>
 					)}
 				</form>
-				{receivedFiles.length === 0 ? (
+				{Array.isArray(receivedFiles) && receivedFiles.length === 0 ? (
 					<p className="text-gray-400 italic">No Files Received Yet.</p>
 				) : (
-					<div className="space-y-4">
+					<div className="space-y-4 max-h-[350px] overflow-y-auto">
 						{receivedFiles.map((file, index) => (
 							<div
 								key={index}
@@ -89,36 +131,20 @@ const FileReceive: React.FC = () => {
 										<p className="text-white text-sm font-medium truncate">
 											{file.name}
 										</p>
-										<p className="text-xs text-gray-400">{file.size}</p>
+										<p className="text-xs text-gray-400">
+											{formatFileSize(Number(file.size))}
+										</p>
 									</div>
 								</div>
 								<div className="flex items-center gap-2">
 									<Button
 										variant="ghost"
 										size="icon"
-										className="bg-gray-600 hover:bg-gray-500 rounded-full cursor-pointer"
-										onClick={() => handlePreview(file.name)}
-										title="Preview"
-									>
-										<Eye className="text-white" size={18} />
-									</Button>
-									<Button
-										variant="ghost"
-										size="icon"
 										className="bg-green-600 hover:bg-green-500 rounded-full cursor-pointer"
-										onClick={() => handleDownload(file.name)}
+										onClick={() => handleDownload(index)}
 										title="Download"
 									>
 										<Download className="text-white" size={18} />
-									</Button>
-									<Button
-										variant="ghost"
-										size="icon"
-										className="bg-red-600 hover:bg-red-500 rounded-full cursor-pointer"
-										onClick={() => handleRemove(index)}
-										title="Delete"
-									>
-										<Trash2 className="text-white" size={18} />
 									</Button>
 								</div>
 							</div>

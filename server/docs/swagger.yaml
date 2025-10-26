@@ -1,0 +1,98 @@
+definitions:
+  utils.Payload:
+    properties:
+      data: {}
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+info:
+  contact: {}
+paths:
+  /api/v1/files:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload multiple files (≤100 MB total) and receive a share token
+      parameters:
+      - description: Files to upload
+        in: formData
+        name: files
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Payload'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Payload'
+      summary: Upload one or more files anonymously
+      tags:
+      - Files
+  /api/v1/share/{token}:
+    get:
+      description: Fetch metadata of all files in a transfer using its share token
+      parameters:
+      - description: Share token
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Payload'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Payload'
+        "410":
+          description: Gone
+          schema:
+            $ref: '#/definitions/utils.Payload'
+      summary: Retrieve shared file details
+      tags:
+      - Files
+  /api/v1/share/{token}/download/{index}:
+    get:
+      description: Download the file corresponding to the given index in the anonymous
+        transfer
+      parameters:
+      - description: Share token
+        in: path
+        name: token
+        required: true
+        type: string
+      - description: File index
+        in: path
+        name: index
+        required: true
+        type: integer
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Payload'
+        "410":
+          description: Gone
+          schema:
+            $ref: '#/definitions/utils.Payload'
+      summary: Download a specific file from a shared transfer
+      tags:
+      - Files
+swagger: "2.0"

@@ -1,0 +1,49 @@
+# Binaries and build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go build output
+/tmp
+tmp/
+bin/
+dist/
+main
+
+# Air temporary build
+.air.toml
+tmp/**
+
+# Local environment variables
+.env
+.env.*
+
+# IDE/editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Dependency / module cache
+vendor/
+go.work
+go.work.sum
+
+# Logs
+*.log
+build-errors.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Coverage / testing
+*.coverprofile
+coverage.out
+
+# Temporary files
+uploads/
