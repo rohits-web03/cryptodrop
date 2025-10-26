@@ -4,12 +4,16 @@ import (
 	"encoding/json"
 	"net/http"
 	"time"
+	"fmt"
+	"io"
+	"context"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/rohits-web03/cryptodrop/internal/config"
 	"github.com/rohits-web03/cryptodrop/internal/models"
 	"github.com/rohits-web03/cryptodrop/internal/repositories"
 	"github.com/rohits-web03/cryptodrop/internal/utils"
+	"github.com/rohits-web03/cryptodrop/internal/api/services"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -258,4 +262,113 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 		Success: true,
 		Message: "Logged out successfully",
 	})
+}
+
+func HandleGoogleLogin(w http.ResponseWriter, r *http.Request) {
+    url := services.GoogleOauthConfig.AuthCodeURL(services.OauthStateString)
+    http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+}
+
+func HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
+	if r.FormValue("state") != services.OauthStateString {
+		http.Error(w, "Invalid OAuth state", http.StatusBadRequest)
+		return
+	}
+
+	code := r.FormValue("code")
+	token, err := services.GoogleOauthConfig.Exchange(context.Background(), code)
+	if err != nil {
+		http.Error(w, "Code exchange failed", http.StatusInternalServerError)
+		fmt.Println("Exchange error:", err)
+		return
+	}
+
+	client := services.GoogleOauthConfig.Client(context.Background(), token)
+	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
+	if err != nil {
+		http.Error(w, "Failed to get user info", http.StatusInternalServerError)
+		return
+	}
+	defer resp.Body.Close()
+
+	data, _ := io.ReadAll(resp.Body)
+
+	var googleUser struct {
+		ID            string `json:"id"`
+		Email         string `json:"email"`
+		VerifiedEmail bool   `json:"verified_email"`
+		Name          string `json:"name"`
+		GivenName     string `json:"given_name"`
+		FamilyName    string `json:"family_name"`
+		Picture       string `json:"picture"`
+	}
+
+	if err := json.Unmarshal(data, &googleUser); err != nil {
+		http.Error(w, "Failed to parse user info", http.StatusInternalServerError)
+		return
+	}
+
+	// Check if user exists
+	var existingUser models.User
+	err = repositories.DB.Where("email = ?", googleUser.Email).First(&existingUser).Error
+
+	if err == gorm.ErrRecordNotFound {
+		// New user (Google)
+		newUser := models.User{
+			Username: googleUser.Name,
+			Email:    googleUser.Email,
+			Password: "", // Google users don't need local password
+			CreatedAt: time.Now(),
+		}
+
+		if err := repositories.DB.Create(&newUser).Error; err != nil {
+			http.Error(w, "Failed to create user", http.StatusInternalServerError)
+			return
+		}
+
+		existingUser = newUser
+	} else if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	// Load JWT secret
+	secret := config.Envs.JWTSecret
+	if secret == "" {
+		http.Error(w, "Missing JWT secret", http.StatusInternalServerError)
+		return
+	}
+
+	// Build JWT claims
+	expiration := time.Now().Add(24 * time.Hour)
+	claims := &Claims{
+		UserID:   existingUser.ID.String(),
+		Username: existingUser.Username,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expiration),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+
+	// Sign the JWT
+	tokenString, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(secret))
+	if err != nil {
+		http.Error(w, "Failed to create JWT", http.StatusInternalServerError)
+		return
+	}
+
+	// Set JWT as HttpOnly cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "token",                     // cookie name
+		Value:    tokenString,                 // JWT token
+		Path:     "/",                          // accessible site-wide
+		MaxAge:   int((24 * time.Hour).Seconds()), // 24-hour expiry
+		HttpOnly: true,                         // inaccessible to JS
+		Secure:   config.Envs.Environment == "production", // only over HTTPS in prod
+		SameSite: http.SameSiteLaxMode,        // adjust if using cross-site requests
+	})
+
+	// Redirect user to frontend page without token in URL
+	http.Redirect(w, r, "http://localhost:5173/share/send", http.StatusTemporaryRedirect)
+
 }
