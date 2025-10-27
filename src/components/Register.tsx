@@ -163,7 +163,11 @@ const Register: React.FC = () => {
 
 						<Button
 							type="button"
-							onClick={() => toast.info('Redirecting to Google signup...')}
+							onClick={() => {
+								toast.info('Redirecting to Google signup...');
+								window.location.href =
+									'http://localhost:8080/api/v1/auth/google/login?redirect=register';
+							}}
 							variant="outline"
 							className="w-full flex items-center justify-center gap-2 border border-gray-400 text-gray-300 hover:bg-white/20 hover:text-white cursor-pointer"
 						>
