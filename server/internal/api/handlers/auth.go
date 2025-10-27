@@ -265,17 +265,32 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleGoogleLogin(w http.ResponseWriter, r *http.Request) {
-    url := services.GoogleOauthConfig.AuthCodeURL(services.OauthStateString)
-    http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+	redirectType := r.URL.Query().Get("redirect") // "login" or "register"
+	if redirectType == "" {
+		redirectType = "login" // default
+	}
+
+	state, err := GenerateState(map[string]string{"flow": redirectType})
+	if err != nil {
+		http.Error(w, "Failed to generate OAuth state", http.StatusInternalServerError)
+		return
+	}
+
+	url := services.GoogleOauthConfig.AuthCodeURL(state)
+	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
 
 func HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
-	if r.FormValue("state") != services.OauthStateString {
+	state := r.FormValue("state")
+	stateData, err := DecodeState(state)
+	if err != nil {
 		http.Error(w, "Invalid OAuth state", http.StatusBadRequest)
 		return
 	}
 
+	flowType := stateData["flow"] // "login" or "register"
 	code := r.FormValue("code")
+
 	token, err := services.GoogleOauthConfig.Exchange(context.Background(), code)
 	if err != nil {
 		http.Error(w, "Code exchange failed", http.StatusInternalServerError)
@@ -294,13 +309,10 @@ func HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	data, _ := io.ReadAll(resp.Body)
 
 	var googleUser struct {
-		ID            string `json:"id"`
-		Email         string `json:"email"`
-		VerifiedEmail bool   `json:"verified_email"`
-		Name          string `json:"name"`
-		GivenName     string `json:"given_name"`
-		FamilyName    string `json:"family_name"`
-		Picture       string `json:"picture"`
+		ID      string `json:"id"`
+		Email   string `json:"email"`
+		Name    string `json:"name"`
+		Picture string `json:"picture"`
 	}
 
 	if err := json.Unmarshal(data, &googleUser); err != nil {
@@ -312,34 +324,39 @@ func HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	var existingUser models.User
 	err = repositories.DB.Where("email = ?", googleUser.Email).First(&existingUser).Error
 
-	if err == gorm.ErrRecordNotFound {
-		// New user (Google)
-		newUser := models.User{
-			Username: googleUser.Name,
-			Email:    googleUser.Email,
-			Password: "", // Google users don't need local password
-			CreatedAt: time.Now(),
+	switch flowType {
+		case "register":
+			// If registering but user already exists
+			if err == nil {
+				http.Redirect(w, r, "http://localhost:5173/register?error=exists", http.StatusTemporaryRedirect)
+				return
+			}
+			// Create new user
+			newUser := models.User{
+				Username: googleUser.Name,
+				Email:    googleUser.Email,
+				Password: "", // Google-authenticated
+				CreatedAt: time.Now(),
+			}
+			if err := repositories.DB.Create(&newUser).Error; err != nil {
+				http.Error(w, "Failed to create user", http.StatusInternalServerError)
+				return
+			}
+			existingUser = newUser
+
+		case "login":
+			// If logging in but user not found
+			if err == gorm.ErrRecordNotFound {
+				http.Redirect(w, r, "http://localhost:5173/login?error=not_found", http.StatusTemporaryRedirect)
+				return
+			} else if err != nil {
+				http.Error(w, "Database error", http.StatusInternalServerError)
+				return
+			}
 		}
 
-		if err := repositories.DB.Create(&newUser).Error; err != nil {
-			http.Error(w, "Failed to create user", http.StatusInternalServerError)
-			return
-		}
-
-		existingUser = newUser
-	} else if err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
-		return
-	}
-
-	// Load JWT secret
+	// Issue JWT
 	secret := config.Envs.JWTSecret
-	if secret == "" {
-		http.Error(w, "Missing JWT secret", http.StatusInternalServerError)
-		return
-	}
-
-	// Build JWT claims
 	expiration := time.Now().Add(24 * time.Hour)
 	claims := &Claims{
 		UserID:   existingUser.ID.String(),
@@ -349,26 +366,28 @@ func HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}
-
-	// Sign the JWT
 	tokenString, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(secret))
 	if err != nil {
 		http.Error(w, "Failed to create JWT", http.StatusInternalServerError)
 		return
 	}
 
-	// Set JWT as HttpOnly cookie
+	// Set cookie
 	http.SetCookie(w, &http.Cookie{
-		Name:     "token",                     // cookie name
-		Value:    tokenString,                 // JWT token
-		Path:     "/",                          // accessible site-wide
-		MaxAge:   int((24 * time.Hour).Seconds()), // 24-hour expiry
-		HttpOnly: true,                         // inaccessible to JS
-		Secure:   config.Envs.Environment == "production", // only over HTTPS in prod
-		SameSite: http.SameSiteLaxMode,        // adjust if using cross-site requests
+		Name:     "token",
+		Value:    tokenString,
+		Path:     "/",
+		MaxAge:   int((24 * time.Hour).Seconds()),
+		HttpOnly: true,
+		Secure:   config.Envs.Environment == "production",
+		SameSite: http.SameSiteLaxMode,
 	})
 
-	// Redirect user to frontend page without token in URL
-	http.Redirect(w, r, "http://localhost:5173/share/send", http.StatusTemporaryRedirect)
+	// Redirect user based on flow type
+	redirectURL := "http://localhost:5173/share/send"
+	if flowType == "register" {
+		redirectURL = "http://localhost:5173/share/receive"
+	}
 
+	http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 }
