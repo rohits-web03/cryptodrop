@@ -6,9 +6,9 @@ import { loginSchema } from '@/schema/auth';
 import type { LogInFormFields } from '@/types/auth';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { User, Lock, EyeOff, Eye } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 const Login: React.FC = () => {
@@ -21,6 +21,23 @@ const Login: React.FC = () => {
 	} = useForm<LogInFormFields>({ resolver: zodResolver(loginSchema) });
 
 	const [showPassword, setShowPassword] = useState(false);
+	const location = useLocation(); // get URL query params
+	const navigate = useNavigate(); // for redirection
+
+	// handle Google OAuth redirect messages
+	useEffect(() => {
+		const params = new URLSearchParams(location.search);
+		const error = params.get('error');
+		const status = params.get('status');
+
+		if (error === 'user_not_found') {
+			toast.error('You need to register first!');
+			navigate('/register', { replace: true });
+		} else if (status === 'success') {
+			toast.success('Successfully logged in!');
+			navigate('/share/send', { replace: true });
+		}
+	}, [location, navigate]);
 
 	const onSubmit = (data: LogInFormFields) => {
 		console.log('Login Data', data);
