@@ -324,11 +324,12 @@ func HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	var existingUser models.User
 	err = repositories.DB.Where("email = ?", googleUser.Email).First(&existingUser).Error
 
+	
 	switch flowType {
 		case "register":
 			// If registering but user already exists
 			if err == nil {
-				http.Redirect(w, r, "http://localhost:5173/register?error=exists", http.StatusTemporaryRedirect)
+				http.Redirect(w, r, "http://localhost:5173/login?error=user_already_exists", http.StatusTemporaryRedirect)
 				return
 			}
 			// Create new user
@@ -347,7 +348,7 @@ func HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		case "login":
 			// If logging in but user not found
 			if err == gorm.ErrRecordNotFound {
-				http.Redirect(w, r, "http://localhost:5173/login?error=not_found", http.StatusTemporaryRedirect)
+				http.Redirect(w, r, "http://localhost:5173/register?error=user_not_found", http.StatusTemporaryRedirect)
 				return
 			} else if err != nil {
 				http.Error(w, "Database error", http.StatusInternalServerError)
@@ -383,11 +384,11 @@ func HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteLaxMode,
 	})
 
-	// Redirect user based on flow type
-	redirectURL := "http://localhost:5173/share/send"
-	if flowType == "register" {
-		redirectURL = "http://localhost:5173/share/receive"
-	}
+	// Redirect user
+	redirectURL := "http://localhost:5173/share/send?status=success"
+	// if flowType == "register" {
+	// 	redirectURL = "http://localhost:5173/share/receive"
+	// }
 
 	http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 }
