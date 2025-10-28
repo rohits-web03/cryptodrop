@@ -7,14 +7,16 @@ import type { RegisterFormFields } from '@/types/auth';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { User, Lock, Mail, Eye, EyeOff } from 'lucide-react';
 import React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 const Register: React.FC = () => {
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+	const location = useLocation();
+	const navigate = useNavigate();
 	const {
 		register,
 		handleSubmit,
@@ -25,7 +27,19 @@ const Register: React.FC = () => {
 	});
 
 	//const password = watch("password");
-
+	// Check for ?error=exists in URL
+	useEffect(() => {
+		const params = new URLSearchParams(location.search);
+		const error = params.get('error');
+		const status = params.get('status');
+		if (error === 'user_already_exists') {
+			toast.error('You already have an account. Please log in instead.');
+			navigate('/login', { replace: true });
+		} else if (status === 'success') {
+			toast.success('Successfully Registered!');
+			navigate('/share/send', { replace: true });
+		}
+	}, [location, navigate]);
 	const onSubmit = (data: RegisterFormFields) => {
 		console.log('Form Data:', data);
 		toast.success('Registration Successful');
