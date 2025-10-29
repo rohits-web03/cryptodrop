@@ -4,7 +4,7 @@ import axios from 'axios';
 import { motion } from 'framer-motion';
 import { Upload, Trash2, Copy } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -13,6 +13,23 @@ const FileUpload: React.FC = () => {
 	const [shareCode, setShareCode] = useState<string>('');
 	const [expiresIn, setExpiresIn] = useState<string>('');
 	const [isUploading, setIsUploading] = useState<boolean>(false);
+	useEffect(() => {
+		const params = new URLSearchParams(location.search);
+		const status = params.get('status');
+
+		if (status === 'success_register') {
+			setTimeout(() => {
+				toast.success('Successfully Registered!');
+			}, 100);
+			console.log('Success');
+			// navigate('/', { replace: true });  // Clears ?error= from URL
+		} else if (status === 'success_login') {
+			setTimeout(() => {
+				toast.success('Successfully Logged-in!');
+			}, 100);
+			console.log('Success');
+		}
+	}, [location.search]);
 
 	const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const selectedFiles = Array.from(e.target.files || []);
