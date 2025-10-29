@@ -4,12 +4,16 @@ import (
 	"encoding/json"
 	"net/http"
 	"time"
+	"fmt"
+	"io"
+	"context"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/rohits-web03/cryptodrop/internal/config"
 	"github.com/rohits-web03/cryptodrop/internal/models"
 	"github.com/rohits-web03/cryptodrop/internal/repositories"
 	"github.com/rohits-web03/cryptodrop/internal/utils"
+	"github.com/rohits-web03/cryptodrop/internal/api/services"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -258,4 +262,133 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 		Success: true,
 		Message: "Logged out successfully",
 	})
+}
+
+func HandleGoogleLogin(w http.ResponseWriter, r *http.Request) {
+	redirectType := r.URL.Query().Get("redirect") // "login" or "register"
+	if redirectType == "" {
+		redirectType = "login" // default
+	}
+
+	state, err := GenerateState(map[string]string{"flow": redirectType})
+	if err != nil {
+		http.Error(w, "Failed to generate OAuth state", http.StatusInternalServerError)
+		return
+	}
+
+	url := services.GoogleOauthConfig.AuthCodeURL(state)
+	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+}
+
+func HandleGoogleCallback(w http.ResponseWriter, r *http.Request) {
+	state := r.FormValue("state")
+	stateData, err := DecodeState(state)
+	if err != nil {
+		http.Error(w, "Invalid OAuth state", http.StatusBadRequest)
+		return
+	}
+
+	flowType := stateData["flow"] // "login" or "register"
+	code := r.FormValue("code")
+
+	token, err := services.GoogleOauthConfig.Exchange(context.Background(), code)
+	if err != nil {
+		http.Error(w, "Code exchange failed", http.StatusInternalServerError)
+		fmt.Println("Exchange error:", err)
+		return
+	}
+
+	client := services.GoogleOauthConfig.Client(context.Background(), token)
+	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
+	if err != nil {
+		http.Error(w, "Failed to get user info", http.StatusInternalServerError)
+		return
+	}
+	defer resp.Body.Close()
+
+	data, _ := io.ReadAll(resp.Body)
+
+	var googleUser struct {
+		ID      string `json:"id"`
+		Email   string `json:"email"`
+		Name    string `json:"name"`
+		Picture string `json:"picture"`
+	}
+
+	if err := json.Unmarshal(data, &googleUser); err != nil {
+		http.Error(w, "Failed to parse user info", http.StatusInternalServerError)
+		return
+	}
+
+	// Check if user exists
+	var existingUser models.User
+	err = repositories.DB.Where("email = ?", googleUser.Email).First(&existingUser).Error
+
+	
+	switch flowType {
+		case "register":
+			// If registering but user already exists
+			if err == nil {
+				http.Redirect(w, r, "http://localhost:5173/login?error=user_already_exists", http.StatusTemporaryRedirect)
+				return
+			}
+			// Create new user
+			newUser := models.User{
+				Username: googleUser.Name,
+				Email:    googleUser.Email,
+				Password: "", // Google-authenticated
+				CreatedAt: time.Now(),
+			}
+			if err := repositories.DB.Create(&newUser).Error; err != nil {
+				http.Error(w, "Failed to create user", http.StatusInternalServerError)
+				return
+			}
+			existingUser = newUser
+
+		case "login":
+			// If logging in but user not found
+			if err == gorm.ErrRecordNotFound {
+				http.Redirect(w, r, "http://localhost:5173/register?error=user_not_found", http.StatusTemporaryRedirect)
+				return
+			} else if err != nil {
+				http.Error(w, "Database error", http.StatusInternalServerError)
+				return
+			}
+		}
+
+	// Issue JWT
+	secret := config.Envs.JWTSecret
+	expiration := time.Now().Add(24 * time.Hour)
+	claims := &Claims{
+		UserID:   existingUser.ID.String(),
+		Username: existingUser.Username,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expiration),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+	tokenString, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(secret))
+	if err != nil {
+		http.Error(w, "Failed to create JWT", http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "token",
+		Value:    tokenString,
+		Path:     "/",
+		MaxAge:   int((24 * time.Hour).Seconds()),
+		HttpOnly: true,
+		Secure:   config.Envs.Environment == "production",
+		SameSite: http.SameSiteLaxMode,
+	})
+
+	// Redirect user
+	redirectURL := "http://localhost:5173/share/send?status=success"
+	// if flowType == "register" {
+	// 	redirectURL = "http://localhost:5173/share/receive"
+	// }
+
+	http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 }

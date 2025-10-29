@@ -37,6 +37,10 @@ func SetupRouter() http.Handler {
 	authMux.HandleFunc("/login", handlers.LoginUser)
 	authMux.HandleFunc("/logout", handlers.Logout)
 
+	//Google OAuth routes
+	authMux.HandleFunc("/google/login", handlers.HandleGoogleLogin)
+	authMux.HandleFunc("/google/callback", handlers.HandleGoogleCallback)
+
 	fileMux := http.NewServeMux()
 	fileMux.HandleFunc("/", handlers.UploadFiles)
 

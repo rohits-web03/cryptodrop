@@ -155,6 +155,25 @@ const Register: React.FC = () => {
 						>
 							Register
 						</Button>
+						<div className="flex items-center my-3">
+							<hr className="flex-grow border-gray-500" />
+							<span className="px-2 text-gray-400 text-sm">or</span>
+							<hr className="flex-grow border-gray-500" />
+						</div>
+
+						<Button
+							type="button"
+							onClick={() => toast.info('Redirecting to Google signup...')}
+							variant="outline"
+							className="w-full flex items-center justify-center gap-2 border border-gray-400 text-gray-300 hover:bg-white/20 hover:text-white cursor-pointer"
+						>
+							<img
+								src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+								alt="Google logo"
+								className="w-5 h-5"
+							/>
+							Sign Up with Google
+						</Button>
 					</form>
 				</CardContent>
 				<CardFooter className="flex justify-center text-sm">
