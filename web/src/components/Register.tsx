@@ -9,14 +9,14 @@ import { User, Lock, Mail, Eye, EyeOff } from 'lucide-react';
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 const Register: React.FC = () => {
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 	const location = useLocation();
-	//const navigate = useNavigate();
+	const navigate = useNavigate();
 	const {
 		register,
 		handleSubmit,
@@ -36,10 +36,10 @@ const Register: React.FC = () => {
 			setTimeout(() => {
 				toast.error('No account found! Please register to continue.');
 			}, 300);
-			// navigate('/register', { replace: true });  // Clears ?error= from URL
+			navigate('/register', { replace: true }); // Clears ?error= from URL
 		}
 		// Remove status=success (doesn't redirect here)
-	}, [location.search]);
+	}, [location.search, navigate]);
 	const onSubmit = (data: RegisterFormFields) => {
 		console.log('Form Data:', data);
 		toast.success('Registration Successful');

@@ -8,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { User, Lock, EyeOff, Eye } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 const Login: React.FC = () => {
@@ -22,7 +22,7 @@ const Login: React.FC = () => {
 
 	const [showPassword, setShowPassword] = useState(false);
 	const location = useLocation(); // get URL query params
-	//const navigate = useNavigate(); // for redirection
+	const navigate = useNavigate(); // for redirection
 
 	// handle Google OAuth redirect messages
 	useEffect(() => {
@@ -32,9 +32,9 @@ const Login: React.FC = () => {
 			setTimeout(() => {
 				toast.error('User already has an account!Please login to continue');
 			}, 300);
-			//navigate('/login', { replace: true });
+			navigate('/login', { replace: true });
 		}
-	}, [location.search]);
+	}, [location.search, navigate]);
 
 	const onSubmit = (data: LogInFormFields) => {
 		console.log('Login Data', data);
