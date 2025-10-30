@@ -7,14 +7,16 @@ import type { RegisterFormFields } from '@/types/auth';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { User, Lock, Mail, Eye, EyeOff } from 'lucide-react';
 import React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 const Register: React.FC = () => {
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+	const location = useLocation();
+	const navigate = useNavigate();
 	const {
 		register,
 		handleSubmit,
@@ -25,7 +27,19 @@ const Register: React.FC = () => {
 	});
 
 	//const password = watch("password");
+	// Check for ?error=exists in URL
+	useEffect(() => {
+		const params = new URLSearchParams(location.search);
+		const error = params.get('error');
 
+		if (error === 'user_not_found') {
+			setTimeout(() => {
+				toast.error('No account found! Please register to continue.');
+			}, 300);
+			navigate('/register', { replace: true }); // Clears ?error= from URL
+		}
+		// Remove status=success (doesn't redirect here)
+	}, [location.search, navigate]);
 	const onSubmit = (data: RegisterFormFields) => {
 		console.log('Form Data:', data);
 		toast.success('Registration Successful');
@@ -154,6 +168,29 @@ const Register: React.FC = () => {
 							className="w-full mt-2 bg-white text-black hover:bg-gray-200 cursor-pointer"
 						>
 							Register
+						</Button>
+						<div className="flex items-center my-3">
+							<hr className="flex-grow border-gray-500" />
+							<span className="px-2 text-gray-400 text-sm">or</span>
+							<hr className="flex-grow border-gray-500" />
+						</div>
+
+						<Button
+							type="button"
+							onClick={() => {
+								toast.info('Redirecting to Google signup...');
+								window.location.href =
+									'http://localhost:8080/api/v1/auth/google/login?redirect=register';
+							}}
+							variant="outline"
+							className="w-full flex items-center justify-center gap-2 border border-gray-400 text-gray-300 hover:bg-white/20 hover:text-white cursor-pointer"
+						>
+							<img
+								src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+								alt="Google logo"
+								className="w-5 h-5"
+							/>
+							Sign Up with Google
 						</Button>
 					</form>
 				</CardContent>
