@@ -24,12 +24,14 @@ const FileUpload: React.FC = () => {
 				toast.success('Successfully Registered!');
 			}, 100);
 			console.log('Success');
-			navigate('/', { replace: true }); // Clears ?error= from URL
+			navigate('/share/send', { replace: true }); // Clears ?error= from URL
 		} else if (status === 'success_login') {
 			setTimeout(() => {
 				toast.success('Successfully Logged-in!');
 			}, 100);
-			console.log('Success');
+			if (location.search.includes('status=')) {
+				navigate(location.pathname, { replace: true });
+			}
 		}
 	}, [location.search, navigate]);
 

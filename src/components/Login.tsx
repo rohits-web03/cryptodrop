@@ -30,7 +30,7 @@ const Login: React.FC = () => {
 		const error = params.get('error');
 		if (error === 'user_already_exists') {
 			setTimeout(() => {
-				toast.error('User already has an account!Please login to continue');
+				toast.error('User already has an account! Please login to continue');
 			}, 300);
 			navigate('/login', { replace: true });
 		}
