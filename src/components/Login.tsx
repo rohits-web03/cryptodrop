@@ -6,9 +6,9 @@ import { loginSchema } from '@/schema/auth';
 import type { LogInFormFields } from '@/types/auth';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { User, Lock, EyeOff, Eye } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 const Login: React.FC = () => {
@@ -21,6 +21,20 @@ const Login: React.FC = () => {
 	} = useForm<LogInFormFields>({ resolver: zodResolver(loginSchema) });
 
 	const [showPassword, setShowPassword] = useState(false);
+	const location = useLocation(); // get URL query params
+	const navigate = useNavigate(); // for redirection
+
+	// handle Google OAuth redirect messages
+	useEffect(() => {
+		const params = new URLSearchParams(location.search);
+		const error = params.get('error');
+		if (error === 'user_already_exists') {
+			setTimeout(() => {
+				toast.error('User already has an account! Please login to continue');
+			}, 300);
+			navigate('/login', { replace: true });
+		}
+	}, [location.search, navigate]);
 
 	const onSubmit = (data: LogInFormFields) => {
 		console.log('Login Data', data);
@@ -96,6 +110,29 @@ const Login: React.FC = () => {
 							className="w-full bg-white text-black hover:bg-gray-200 cursor-pointer"
 						>
 							Login
+						</Button>
+						<div className="flex items-center my-3">
+							<hr className="flex-grow border-gray-500" />
+							<span className="px-2 text-gray-400 text-sm">or</span>
+							<hr className="flex-grow border-gray-500" />
+						</div>
+
+						<Button
+							type="button"
+							onClick={() => {
+								toast.info('Redirecting to Google login...');
+								window.location.href =
+									'http://localhost:8080/api/v1/auth/google/login?redirect=login';
+							}}
+							variant="outline"
+							className="w-full flex items-center justify-center gap-2 border border-gray-400 text-gray-300 hover:bg-white/20 hover:text-white cursor-pointer"
+						>
+							<img
+								src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+								alt="Google logo"
+								className="w-5 h-5"
+							/>
+							Login with Google
 						</Button>
 					</form>
 				</CardContent>
