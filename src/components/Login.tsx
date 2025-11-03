@@ -10,9 +10,9 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { motion } from 'framer-motion';
 
 const Login: React.FC = () => {
-	//const navigate=useNavigate();
 	const {
 		register,
 		handleSubmit,
@@ -21,10 +21,9 @@ const Login: React.FC = () => {
 	} = useForm<LogInFormFields>({ resolver: zodResolver(loginSchema) });
 
 	const [showPassword, setShowPassword] = useState(false);
-	const location = useLocation(); // get URL query params
-	const navigate = useNavigate(); // for redirection
+	const location = useLocation();
+	const navigate = useNavigate();
 
-	// handle Google OAuth redirect messages
 	useEffect(() => {
 		const params = new URLSearchParams(location.search);
 		const error = params.get('error');
@@ -41,112 +40,298 @@ const Login: React.FC = () => {
 		toast.success('Successfully Logged In');
 		reset();
 	};
+
 	return (
-		<div className="flex items-center justify-center min-h-screen bg-black">
-			<Card className="w-full max-w-md bg-white/10 backdrop-blur-md text-white border-none shadow-xl">
-				<CardHeader className="text-center">
-					<CardTitle className="text-3xl font-bold">Welcome Back</CardTitle>
-					<p className="text-sm text-gray-300 mt-2">
-						Log in to access your files and shared content.
-					</p>
-				</CardHeader>
-				<CardContent>
-					<form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-						<div>
-							<Label htmlFor="username">Username</Label>
-							<div className="relative mt-2">
-								<Input
-									id="username"
-									placeholder="Enter Your Username"
-									{...register('username')}
-									className="pl-9 bg-white/20 text-white border-none placeholder-gray-300"
-								/>
-								<User
-									className="absolute left-[0.5rem] top-[0.5rem] text-gray-300"
-									size={20}
-									strokeWidth={2}
-								/>
-							</div>
-							{errors.username && (
-								<p className="text-red-400 text-sm mt-1">
-									{errors.username.message}
-								</p>
-							)}
-						</div>
+		<div className="min-h-screen grid lg:grid-cols-2 relative overflow-hidden">
+			{/* Left Side - Branding/Hero Section */}
+			<motion.div
+				initial={{ opacity: 0, x: -50 }}
+				animate={{ opacity: 1, x: 0 }}
+				transition={{ duration: 0.8, ease: 'easeOut' }}
+				className="relative bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 lg:flex flex-col justify-center items-center p-12 max-lg:hidden overflow-hidden"
+			>
+				{/* Animated background elements */}
+				<div className="absolute inset-0">
+					<motion.div
+						animate={{
+							scale: [1, 1.3, 1],
+							opacity: [0.2, 0.4, 0.2],
+						}}
+						transition={{
+							duration: 6,
+							repeat: Infinity,
+							ease: 'easeInOut',
+						}}
+						className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-purple-500/30 rounded-full blur-3xl"
+					/>
+					<motion.div
+						animate={{
+							scale: [1, 1.3, 1],
+							opacity: [0.2, 0.4, 0.2],
+						}}
+						transition={{
+							duration: 6,
+							repeat: Infinity,
+							ease: 'easeInOut',
+							delay: 3,
+						}}
+						className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-blue-500/30 rounded-full blur-3xl"
+					/>
+				</div>
 
-						<div>
-							<Label htmlFor="password">Password</Label>
-							<div className="relative mt-2">
-								<Input
-									id="password"
-									type={showPassword ? 'text' : 'password'}
-									placeholder="Enter Your Password"
-									{...register('password')}
-									className="pl-9 bg-white/20 text-white border-none placeholder-gray-300"
-								/>
-								<Lock
-									className="absolute left-[0.5rem] top-[0.5rem] text-gray-300"
-									size={20}
-									strokeWidth={2}
-								/>
-								<Button
-									type="button"
-									variant="ghost"
-									size="icon"
-									onClick={() => setShowPassword(!showPassword)}
-									className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-300 cursor-pointer hover:text-white hover:bg-transparent "
+				{/* Content */}
+				<div className="relative z-10 max-w-lg">
+	<motion.div
+		initial={{ opacity: 0, y: 20 }}
+		animate={{ opacity: 1, y: 0 }}
+		transition={{ duration: 0.6, delay: 0.3 }}
+	>
+		<h1 className="text-6xl font-bold text-p4 mb-6 max-xl:text-5xl">
+			Welcome to <b className="text-p1">Obscyra</b>
+		</h1>
+		<p className="text-xl text-p4/70 mb-8 leading-relaxed max-xl:text-lg">
+			Share files instantly, securely, and without leaving a trace. 
+			Your privacy meets simplicity — no installs, no local storage, no limits.
+		</p>
+		<div className="space-y-4">
+			<div className="flex items-center gap-4">
+				<div className="w-12 h-12 rounded-xl  flex items-center justify-center backdrop-blur-sm">
+					<div className="w-12 h-12 rounded-xl   flex items-center justify-center backdrop-blur-sm">
+					<img src="/images/detail-3.png" alt="" />
+				</div>
+				</div>
+				<p className="text-p4/80">End-to-end encrypted transfers</p>
+			</div>
+			<div className="flex items-center gap-4">
+				<div className="w-12 h-12 rounded-xl  flex items-center justify-center backdrop-blur-sm">
+					<div className="w-12 h-12 rounded-xl   flex items-center justify-center backdrop-blur-sm">
+					<img src="/images/detail-2.png" alt="" />
+				</div>
+				</div>
+				<p className="text-p4/80">No local storage required</p>
+			</div>
+			<div className="flex items-center gap-4">
+				<div className="w-12 h-12 rounded-xl   flex items-center justify-center backdrop-blur-sm">
+					<img src="/images/detail-1.png" alt="" />
+				</div>
+				<p className="text-p4/80">Instant file sharing</p>
+			</div>
+		</div>
+	</motion.div>
+</div>
+
+			</motion.div>
+
+			{/* Right Side - Login Form */}
+			<div className="relative bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 flex items-center justify-center p-6 lg:p-12">
+				{/* Mobile background elements */}
+				<div className="absolute inset-0 lg:hidden opacity-20">
+					<motion.div
+						animate={{
+							scale: [1, 1.2, 1],
+							opacity: [0.3, 0.5, 0.3],
+						}}
+						transition={{
+							duration: 4,
+							repeat: Infinity,
+							ease: 'easeInOut',
+						}}
+						className="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-500/30 rounded-full blur-3xl"
+					/>
+					<motion.div
+						animate={{
+							scale: [1, 1.2, 1],
+							opacity: [0.3, 0.5, 0.3],
+						}}
+						transition={{
+							duration: 4,
+							repeat: Infinity,
+							ease: 'easeInOut',
+							delay: 2,
+						}}
+						className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-blue-500/30 rounded-full blur-3xl"
+					/>
+				</div>
+
+				<motion.div
+					initial={{ opacity: 0, y: 20 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ duration: 0.6, ease: 'easeOut' }}
+					className="relative z-10 w-full max-w-md"
+				>
+					<Card className="relative border-2 border-s4/25 bg-s1/50 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden">
+						{/* Gradient overlay at top */}
+						<div className="absolute top-0 left-0 right-0 h-48 bg-gradient-to-br from-purple-500/20 via-blue-500/20 to-transparent opacity-50 blur-xl" />
+
+						<CardHeader className="relative z-10 text-center pt-10 pb-6 px-7 max-md:pt-8 max-md:pb-4">
+							<motion.div
+								initial={{ opacity: 0, scale: 0.9 }}
+								animate={{ opacity: 1, scale: 1 }}
+								transition={{ duration: 0.5, delay: 0.2 }}
+							>
+								<CardTitle className="text-4xl font-bold text-p4 mb-3 max-md:text-3xl max-sm:text-2xl">
+									Welcome Back
+								</CardTitle>
+								<p className="text-sm text-p4/70 max-sm:text-xs">
+									Log in to access your files and shared content.
+								</p>
+							</motion.div>
+						</CardHeader>
+
+						<CardContent className="relative z-10 px-7 max-md:px-5">
+							<form onSubmit={handleSubmit(onSubmit)} className="space-y-5 max-md:space-y-4">
+								{/* Username Field */}
+								<motion.div
+									initial={{ opacity: 0, x: -20 }}
+									animate={{ opacity: 1, x: 0 }}
+									transition={{ duration: 0.5, delay: 0.3 }}
 								>
-									{showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-								</Button>
-							</div>
-							{errors.password && (
-								<p className="text-red-400 text-sm mt-1">
-									{errors.password.message}
-								</p>
-							)}
-						</div>
-						<Button
-							type="submit"
-							className="w-full bg-white text-black hover:bg-gray-200 cursor-pointer"
-						>
-							Login
-						</Button>
-						<div className="flex items-center my-3">
-							<hr className="flex-grow border-gray-500" />
-							<span className="px-2 text-gray-400 text-sm">or</span>
-							<hr className="flex-grow border-gray-500" />
-						</div>
+									<Label htmlFor="username" className="block text-sm font-medium text-p4 mb-2 max-sm:text-xs">
+										Username
+									</Label>
+									<div className="relative">
+										<Input
+											id="username"
+											placeholder="Enter Your Username"
+											{...register('username')}
+											className="pl-11 pr-4 py-3 bg-s1/30 border-2 border-s4/25 rounded-xl text-p4 placeholder-p4/50 focus:border-p1/50 focus:bg-s1/40 transition-all duration-300 max-sm:text-sm max-sm:py-2.5"
+										/>
+										<User
+											className="absolute left-3 top-1/2 -translate-y-1/2 text-p4/60 max-sm:w-4 max-sm:h-4"
+											size={20}
+											strokeWidth={2}
+										/>
+									</div>
+									{errors.username && (
+										<p className="text-red-400 text-xs mt-1.5">
+											{errors.username.message}
+										</p>
+									)}
+								</motion.div>
 
-						<Button
-							type="button"
-							onClick={() => {
-								toast.info('Redirecting to Google login...');
-								window.location.href =
-									'http://localhost:8080/api/v1/auth/google/login?redirect=login';
-							}}
-							variant="outline"
-							className="w-full flex items-center justify-center gap-2 border border-gray-400 text-gray-300 hover:bg-white/20 hover:text-white cursor-pointer"
-						>
-							<img
-								src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-								alt="Google logo"
-								className="w-5 h-5"
-							/>
-							Login with Google
-						</Button>
-					</form>
-				</CardContent>
-				<CardFooter className="flex justify-center text-sm">
-					Don&apos;t have an account?{' '}
-					<Link
-						to="/register"
-						className="ml-1 text-blue-400 font-semibold hover:underline"
-					>
-						Register
-					</Link>
-				</CardFooter>
-			</Card>
+								{/* Password Field */}
+								<motion.div
+									initial={{ opacity: 0, x: -20 }}
+									animate={{ opacity: 1, x: 0 }}
+									transition={{ duration: 0.5, delay: 0.4 }}
+								>
+									<Label htmlFor="password" className="block text-sm font-medium text-p4 mb-2 max-sm:text-xs">
+										Password
+									</Label>
+									<div className="relative">
+										<Input
+											id="password"
+											type={showPassword ? 'text' : 'password'}
+											placeholder="Enter Your Password"
+											{...register('password')}
+											className="pl-11 pr-12 py-3 bg-s1/30 border-2 border-s4/25 rounded-xl text-p4 placeholder-p4/50 focus:border-p1/50 focus:bg-s1/40 transition-all duration-300 max-sm:text-sm max-sm:py-2.5"
+										/>
+										<Lock
+											className="absolute left-3 top-1/2 -translate-y-1/2 text-p4/60 max-sm:w-4 max-sm:h-4"
+											size={20}
+											strokeWidth={2}
+										/>
+										<Button
+											type="button"
+											variant="ghost"
+											size="icon"
+											onClick={() => setShowPassword(!showPassword)}
+											className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-p4/60 hover:text-p4 hover:bg-transparent transition-colors duration-200"
+										>
+											{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+										</Button>
+									</div>
+									{errors.password && (
+										<p className="text-red-400 text-xs mt-1.5">
+											{errors.password.message}
+										</p>
+									)}
+								</motion.div>
+
+								{/* Login Button */}
+								<motion.div
+									initial={{ opacity: 0, y: 10 }}
+									animate={{ opacity: 1, y: 0 }}
+									transition={{ duration: 0.5, delay: 0.5 }}
+								>
+									<Button
+										type="submit"
+										className="w-full py-3.5 bg-gradient-to-r from-purple-500 via-blue-500 to-purple-500 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer max-sm:py-3 max-sm:text-sm"
+										style={{
+											backgroundSize: '200% 100%',
+											backgroundPosition: '0% 0%',
+										}}
+										onMouseEnter={(e) => {
+											e.currentTarget.style.backgroundPosition = '100% 0%';
+										}}
+										onMouseLeave={(e) => {
+											e.currentTarget.style.backgroundPosition = '0% 0%';
+										}}
+									>
+										Login
+									</Button>
+								</motion.div>
+
+								{/* Divider */}
+								<motion.div
+									initial={{ opacity: 0 }}
+									animate={{ opacity: 1 }}
+									transition={{ duration: 0.5, delay: 0.6 }}
+									className="flex items-center my-5 max-md:my-4"
+								>
+									<hr className="flex-grow border-s4/25" />
+									<span className="px-3 text-p4/50 text-sm max-sm:text-xs">or</span>
+									<hr className="flex-grow border-s4/25" />
+								</motion.div>
+
+								{/* Google Login Button */}
+								<motion.div
+									initial={{ opacity: 0, y: 10 }}
+									animate={{ opacity: 1, y: 0 }}
+									transition={{ duration: 0.5, delay: 0.7 }}
+								>
+									<Button
+										type="button"
+										onClick={() => {
+											toast.info('Redirecting to Google login...');
+											window.location.href =
+												'http://localhost:8080/api/v1/auth/google/login?redirect=login';
+										}}
+										variant="outline"
+										className="w-full py-3.5 flex items-center justify-center gap-3 border-2 border-s4/25 bg-s1/20 text-p4 rounded-xl hover:bg-s1/40 hover:border-p1/30 transition-all duration-300 hover:scale-[1.02] cursor-pointer max-sm:py-3 max-sm:text-sm max-sm:gap-2"
+									>
+										<img
+											src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+											alt="Google logo"
+											className="w-5 h-5 max-sm:w-4 max-sm:h-4"
+										/>
+										<span className="font-medium">Login with Google</span>
+									</Button>
+								</motion.div>
+							</form>
+						</CardContent>
+
+						<CardFooter className="relative z-10 flex justify-center text-sm pb-8 px-7 max-md:pb-6 max-sm:pb-5">
+							<motion.p
+								initial={{ opacity: 0 }}
+								animate={{ opacity: 1 }}
+								transition={{ duration: 0.5, delay: 0.8 }}
+								className="text-p4/70 max-sm:text-xs"
+							>
+								Don&apos;t have an account?{' '}
+								<Link
+									to="/register"
+									className="ml-1 text-p1 font-semibold hover:text-p3 transition-colors duration-200"
+								>
+									Register
+								</Link>
+							</motion.p>
+						</CardFooter>
+					</Card>
+				</motion.div>
+			</div>
 		</div>
 	);
 };
+
 export default Login;

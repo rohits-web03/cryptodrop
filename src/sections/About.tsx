@@ -131,7 +131,7 @@ const HowItWorks = () => {
                 transition={{ duration: 0.5, delay: 0.3 }}
                 className="h3 max-md:h4 text-p4 uppercase mb-8 text-center"
               >
-                Why <span className="text-p3">CryptoDrop?</span>
+                Why <span className="text-p3">Obscyra?</span>
               </motion.h2>
 
               <motion.div
@@ -145,7 +145,7 @@ const HowItWorks = () => {
                   &quot;
                 </div>
                 <blockquote className="relative z-10 body-1 text-p4 text-center mb-6 max-w-2xl mx-auto px-6">
-                  We built CryptoDrop because we were tired of platforms reading
+                  We built Obscyra because we were tired of platforms reading
                   our data &apos;for security reasons.&apos;
                 </blockquote>
                 <div className="absolute -right-4 -bottom-2 text-6xl text-p3/30 font-serif max-md:text-4xl">
@@ -160,7 +160,7 @@ const HowItWorks = () => {
                 transition={{ duration: 0.5, delay: 0.5 }}
                 className="text-center text-p5 caption uppercase tracking-wider"
               >
-                — Team CryptoDrop
+                — Team Obscyra
               </motion.p>
             </div>
           </motion.div>

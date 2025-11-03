@@ -34,7 +34,7 @@ const Hero = () => {
 							transition={{ duration: 0.7, delay: 0.2, ease: 'easeOut' }}
 							className="max-w-440 mb-14 body-1 max-md:mb-10"
 						>
-							We built CryptoDrop to make file transfer fast, encrypted, and
+							We built <b>Obscyra</b> to make file transfer fast, encrypted, and
 							effortless — all right from your browser.
 						</motion.p>
 

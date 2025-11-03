@@ -4,7 +4,7 @@ export const features = [
     icon: "/images/feature-1.png",
     caption: "End-to-End Encryption",
     title: "Your files, fully protected",
-    text: "CryptoDrop encrypts every file with advanced cryptography, guaranteeing only you and your recipient can access it securely.",
+    text: "Obscyra encrypts every file with advanced cryptography, guaranteeing only you and your recipient can access it securely.",
     button: {
       icon: "/images/magictouch.svg",
       title: "Learn more",
@@ -49,7 +49,7 @@ export const details = [
 export const faq = [
   {
     id: "0",
-    question: "Is CryptoDrop free?",
+    question: "Is Obscyra free?",
     answer:
       "Yes, you can share files for free with a limited time duration and share count. Upgrade for extended storage and limits.",
   },
@@ -75,7 +75,7 @@ export const faq = [
     id: "4",
     question: "Will you release a mobile app?",
     answer:
-      "Yes, a mobile version of CryptoDrop is already in our roadmap and will launch soon after the web release.",
+      "Yes, a mobile version of Obscyra is already in our roadmap and will launch soon after the web release.",
   },
   {
   id: "5",
@@ -87,7 +87,7 @@ export const faq = [
   id: "6",
   question: "What file types are supported?",
   answer:
-    "CryptoDrop supports all major file formats including documents, images, videos, and archives, with size limits based on your plan.",
+    "Obscyra supports all major file formats including documents, images, videos, and archives, with size limits based on your plan.",
 },
 {
   id: "7",

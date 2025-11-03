@@ -35,7 +35,7 @@ const Footer = () => {
 								className="size-8 object-contain"
 							/>
 							<p className="opacity-70">
-								© {new Date().getFullYear()} CryptoDrop. All rights reserved.
+								© {new Date().getFullYear()} Obscyra. All rights reserved.
 							</p>
 						</div>
 					</motion.div>
