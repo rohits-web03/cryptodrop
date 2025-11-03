@@ -54,10 +54,10 @@ const Header = () => {
         >
           <img
             src="/images/cdlogo.png"
-            width={160}
-            height={55}
+            width={200}
+            height={65}
             alt="logo"
-            className="max-lg:w-[115px]"
+            className="max-lg:w-[115px] md:-ml-4"
           />
         </LinkScroll>
 

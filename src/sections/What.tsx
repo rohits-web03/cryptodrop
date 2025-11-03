@@ -28,7 +28,7 @@ const WhatIsCryptoDrop = () => {
                   transition={{ duration: 0.5, delay: 0.1 }}
                   className="caption small-2 uppercase text-p3 mb-4"
                 >
-                  What is CryptoDrop?
+                  What is Obscyra?
                 </motion.div>
 
                 <motion.h2
@@ -49,7 +49,7 @@ const WhatIsCryptoDrop = () => {
                   transition={{ duration: 0.5, delay: 0.3 }}
                   className="body-1 text-p4 mb-8 max-w-lg leading-relaxed"
                 >
-                  CryptoDrop is a peer-to-peer (P2P) and server-based hybrid
+                  <b>Obscyra</b> server-based hybrid
                   sharing platform that ensures your files are end-to-end
                   encrypted — whether you&apos;re sharing with one friend or a team.
                 </motion.p>
@@ -147,7 +147,7 @@ const WhatIsCryptoDrop = () => {
                         <span className="text-2xl"><img src="/images/detail-1.png" /></span>
                       </div>
                       <span className="base-bold text-p4 text-center">
-                        P2P Hybrid
+                        Cloud Native
                       </span>
                     </motion.div>
 
