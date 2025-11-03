@@ -31,7 +31,7 @@ const FileReceive: React.FC = () => {
 	useEffect(() => {
 		const urlParams = new URLSearchParams(window.location.search);
 		const scodeFromUrl = urlParams.get('scode');
-		
+
 		if (scodeFromUrl) {
 			setValue('sharingCode', scodeFromUrl);
 			// Removed the auto-fetchFiles call here
@@ -65,33 +65,35 @@ const FileReceive: React.FC = () => {
 	const handleDownload = async (index: number) => {
 		try {
 			setDownloadingIndex(index);
+
+			// 1. Request presigned download URL
 			const response = await axios.get(
-				`${import.meta.env.VITE_API_BASE_URL}/api/v1/share/${shareCode.current}/download/${index}`,
-				{
-					responseType: 'blob',
-				}
+				`${import.meta.env.VITE_API_BASE_URL}/api/v1/share/${shareCode.current}/presign-download/${index}`
 			);
 
-			const contentDisposition = response.headers['content-disposition'];
-			let filename = 'file';
+			const { url, content_type, filename } = response.data?.data || {};
+			if (!url) throw new Error('Download URL not received');
 
-			if (contentDisposition) {
-				const match = contentDisposition.match(/filename="(.+)"/);
-				if (match?.[1]) filename = match[1];
-			}
+			// 2. Fetch the file directly from R2 using the presigned URL
+			const fileResponse = await axios.get(url, {
+				responseType: 'blob',
+			});
 
-			const url = window.URL.createObjectURL(new Blob([response.data]));
+			// 3. Create object URL and trigger download
+			const blob = new Blob([fileResponse.data], { type: content_type || 'application/octet-stream' });
+			const objectUrl = window.URL.createObjectURL(blob);
 			const a = document.createElement('a');
-			a.href = url;
+			a.href = objectUrl;
 			a.download = filename;
 			document.body.appendChild(a);
 			a.click();
 			a.remove();
-			window.URL.revokeObjectURL(url);
+			window.URL.revokeObjectURL(objectUrl);
+
 			toast.success('File downloaded successfully');
 		} catch (error: unknown) {
 			if (axios.isAxiosError(error)) {
-				console.error(error.response?.data?.message);
+				console.error(error.response?.data?.message || error.message);
 				toast.error(error.response?.data?.message || 'Failed to download file');
 			} else {
 				console.error(error);
@@ -337,7 +339,7 @@ const FileReceive: React.FC = () => {
 											</div>
 
 											{/* Download All Button */}
-											{receivedFiles.length > 1 && (
+											{/* {receivedFiles.length > 1 && (
 												<motion.div
 													initial={{ opacity: 0, y: 20 }}
 													animate={{ opacity: 1, y: 0 }}
@@ -358,7 +360,7 @@ const FileReceive: React.FC = () => {
 														Download All Files
 													</Button>
 												</motion.div>
-											)}
+											)} */}
 										</motion.div>
 									)}
 								</AnimatePresence>
