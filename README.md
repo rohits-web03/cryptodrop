@@ -1,6 +1,6 @@
-# CryptoDrop Client
+# Obscyra Client
 
-This directory contains the React frontend application built with Vite and managed with pnpm for cryptodrop.
+This directory contains the React frontend application built with Vite and managed with pnpm for obscyra.
 
 ## Table of Contents
 
@@ -49,7 +49,7 @@ Build Development Image:
 This image is used for active development, featuring hot-reloading.
 
 ```bash
-docker build -t cryptodrop-web:dev --target development .
+docker build -t obscyra-web:dev --target development .
 ```
 
 Build Production Image:
@@ -57,7 +57,7 @@ Build Production Image:
 This image contains the optimized, static production build served by Nginx.
 
 ```bash
-docker build -t cryptodrop-web:prod --target production .
+docker build -t obscyra-web:prod --target production .
 ```
 
 This command implicitly builds the final production stage of the Dockerfile.
@@ -67,7 +67,7 @@ Running Development Container
 To develop your application with hot-reloading within a Docker container:
 
 ```bash
-docker run -it --rm -p 5173:5173 -v "$(pwd):/app" -v /app/node_modules cryptodrop-web:dev
+docker run -it --rm -p 5173:5173 -v "$(pwd):/app" -v /app/node_modules obscyra-web:dev
 ```
 
 - 5173:5173: Maps the container's Vite development port to your host machine.
@@ -83,7 +83,7 @@ Running Production Container
 To run the optimized production build:
 
 ```bash
-docker run --rm -p 80:80 cryptodrop-web:prod
+docker run --rm -p 80:80 obscyra-web:prod
 ```
 
 - 80:80: Maps the container's Nginx port to your host machine's port 80.

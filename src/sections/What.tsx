@@ -1,7 +1,7 @@
 import { Element } from "react-scroll";
 import { motion } from "framer-motion";
 
-const WhatIsCryptoDrop = () => {
+const WhatIsObscyra = () => {
   const features = [
     { text: "No installs", icon: "✓" },
     { text: "No tracking", icon: "✓" },
@@ -10,7 +10,7 @@ const WhatIsCryptoDrop = () => {
 
   return (
     <section className="relative overflow-hidden">
-      <Element name="what-is-cryptodrop">
+      <Element name="what-is-obsycra">
         <div className="container py-28 max-md:py-20">
           <div className="relative z-2 max-w-6xl mx-auto">
             <div className="grid lg:grid-cols-2 gap-16 max-lg:gap-12 items-center">
@@ -183,7 +183,7 @@ const WhatIsCryptoDrop = () => {
                   >
                     <img
                       src="/images/iconlogo.png"
-                      alt="CryptoDrop"
+                      alt="Obscyra"
                       className="size-12 object-contain"
                     />
                   </motion.div>
@@ -213,4 +213,4 @@ const WhatIsCryptoDrop = () => {
   );
 };
 
-export default WhatIsCryptoDrop;
+export default WhatIsObscyra;

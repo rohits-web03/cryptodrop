@@ -1,14 +1,14 @@
 version: "3.9"
 services:
   server:
-    image: ghcr.io/rohits-web03/cryptodrop-server:latest
-    container_name: cryptodrop-server
+    image: ghcr.io/rohits-web03/obscyra-server:latest
+    container_name: obscyra-server
     env_file:
       - .env.server
     ports:
       - "8080:8080"
     networks:
-      - cryptodrop-net
+      - obscyra-net
 
   web:
     build:
@@ -25,9 +25,9 @@ services:
     depends_on:
       - server
     networks:
-      - cryptodrop-net
+      - obscyra-net
 
 networks:
-  cryptodrop-net:
+  obscyra-net:
 
 

@@ -78,7 +78,7 @@ const Hero = () => {
 							}}
 							src="/images/iconlogo.png"
 							className="size-[475px] max-lg:h-auto"
-							alt="CryptoDrop hero"
+							alt="Obscyra hero"
 						/>
 					</motion.div>
 

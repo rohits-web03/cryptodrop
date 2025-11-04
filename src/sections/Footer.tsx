@@ -31,7 +31,7 @@ const Footer = () => {
 								transition={{ duration: 0.4 }}
 								whileHover={{ scale: 1.1, rotate: 5 }}
 								src="/images/iconlogo.png"
-								alt="CryptoDrop"
+								alt="Obscyra"
 								className="size-8 object-contain"
 							/>
 							<p className="opacity-70">

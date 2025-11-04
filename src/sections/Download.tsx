@@ -20,7 +20,7 @@ const Download = () => {
 									src="/images/cdlogo.png"
 									width={180}
 									height={60}
-									alt="CryptoDrop"
+									alt="Obscyra"
 								/>
 							</motion.div>
 
@@ -121,7 +121,7 @@ const Download = () => {
 										src="/images/cd-prv.gif"
 										width={1000}
 										height={1000}
-										alt="CryptoDrop interface preview"
+										alt="Obscyra interface preview"
 										className="rounded-xl"
 									/>
 								</motion.div>
