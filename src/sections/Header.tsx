@@ -1,5 +1,6 @@
 import { Link as LinkScroll } from "react-scroll";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import clsx from "clsx";
 
 interface NavLinkProps {
@@ -7,6 +8,7 @@ interface NavLinkProps {
 }
 
 const Header = () => {
+  const navigate = useNavigate();
   const [hasScrolled, setHasScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -122,11 +124,9 @@ const Header = () => {
         </div>
 
         {/* Desktop Login Button - Right Side */}
-        <a href="/login">
-          <button className="max-lg:hidden base-bold text-p4 uppercase transition-colors duration-500 hover:text-p1 border-2 border-s4/25 rounded-full px-6 py-2 bg-s3/10 backdrop-blur-sm hover:bg-p1/10 z-2">
+          <button onClick={()=>{navigate('/login')}} className="max-lg:hidden base-bold text-p4 uppercase transition-colors duration-500 hover:text-p1 border-2 border-s4/25 rounded-full px-6 py-2 bg-s3/10 backdrop-blur-sm hover:bg-p1/10 z-2">
             Login
           </button>
-        </a>
 
         {/* Mobile Menu Toggle */}
         <button
