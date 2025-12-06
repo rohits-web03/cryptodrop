@@ -40,7 +40,7 @@ const FileUpload: React.FC = () => {
 		seconds: 0
 	});
 	const [selectedExpiry,setSelectedExpiry] = useState<ExpiryOption>(Expiry_Options[0]);
-	//const isAuthenticated = Boolean(localStorage.getItem('authToken'));//Replace with the real auth check
+	const isAuthenticated = Boolean(localStorage.getItem('authToken'));//Replace with the real auth check
 	const navigate = useNavigate();
 
 	useEffect(() => {
@@ -219,8 +219,12 @@ const FileUpload: React.FC = () => {
 					contentType: files[index].type,
 				})
 			),
-			expiresInSeconds:selectedExpiry.value === 'forever' ? null :selectedExpiry.value, ///Change the expiresInSecond name with the Backend assigned name
+			
 		};
+		if(isAuthenticated)
+		{
+			completeUploadPayload.expiresInSeconds=selectedExpiry.value === 'forever'? null :selectedExpiry.value;//Rename "expiresinSecond" to the backend assigned
+		}
 
 			const completeUploadRes = await axios.post(
 				`${import.meta.env.VITE_API_BASE_URL}/api/v1/files/complete`,
@@ -473,16 +477,21 @@ const FileUpload: React.FC = () => {
 															<div className='flex items-center justify-between mb-2'>
 																<p className='text-p4 text-sm font-semibold flex items-center gap-2'>
 																	<span>Expires in</span>
-																
-																</p>
+																    {!isAuthenticated && (<span className='text-[10px] px-2 py-0.5 rounded-full bg-s2/70 text-p5/80 uppercase'>
+																	  Login Required
+																	</span>
+																	)}
+	 															</p>
 															</div>
 															<div className='relative'>
 																<Select value={selectedExpiry.label} 
 																onValueChange={(value:string)=> {
 																const opt =Expiry_Options.find(o=>o.label ===value);
 																if (opt) setSelectedExpiry(opt);
-															}}>
-																<SelectTrigger className="w-full bg-s1/40 border border-s4/25 rounded-xl px-4 py-2 text-sm text-p4 pr-8 appearance-none focus:outline-none focus:ring-2 focus:ring-p1/30 focus:border-p1/50">
+															}} 
+															disabled ={!isAuthenticated}>
+																<SelectTrigger disabled={!isAuthenticated} className={`w-full bg-s1/40 border border-s4/25 rounded-xl px-4 py-2 text-sm text-p4 pr-8 appearance-none focus:outline-none focus:ring-2 focus:ring-p1/30 focus:border-p1/50 ${!isAuthenticated ? 'opacity-60 cursor-not-allowed': ''}`}>
+																
 																    <SelectValue placeholder = "Select Expiry" />
 																</SelectTrigger>
 																<SelectContent className="bg-s2 border border-s4/25 text-p4">
@@ -496,6 +505,13 @@ const FileUpload: React.FC = () => {
  																</SelectContent>
 															</Select>
 															</div>
+															{!isAuthenticated && (
+																<p className='mt-2 text-[11px] text-p4/60'>Guests use the default 1 hour expiry.{' '}
+																   <span className='underline cursor-pointer' onClick={()=> navigate('/register')}>
+                                                                       Create Account
+																   </span> to set custom durations.
+																</p>
+															)}
 														</div>
 													</motion.div>
 												)}
