@@ -1,5 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/hooks/useAuth';
+import {Select,SelectTrigger,SelectValue,SelectContent, SelectItem} from '@/components/ui/select';
+
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, Trash2, Copy, Share2, FileIcon, CheckCircle2, Link as LinkIcon } from 'lucide-react';
@@ -8,6 +11,20 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import QRCode from 'qrcode';
+
+type ExpiryOption ={
+	label:string;
+	value: number | 'forever';
+	free ?: boolean
+};
+const Expiry_Options:ExpiryOption[] =[
+	{label:'1 hour (default)',value:60*60,free:true},
+	{label:'1 day',value:24*60*60,free:true},
+	{label:'3 days',value:3*24*60*60,free:true},
+	{label:'7 days',value:7*24*60*60},
+	{label:'30 days',value:30*24*60*60},
+	{label:'Keep Forever',value:'forever'},
+];
 
 const FileUpload: React.FC = () => {
 	const [files, setFiles] = useState<File[]>([]);
@@ -23,6 +40,10 @@ const FileUpload: React.FC = () => {
 		minutes: 0,
 		seconds: 0
 	});
+	const [selectedExpiry,setSelectedExpiry] = useState<ExpiryOption>(Expiry_Options[0]);
+	//const isAuthenticated = Boolean(localStorage.getItem('authToken'));//Replace with the real auth check
+	const { isAuthenticated, isLoading } = useAuth();
+
 	const navigate = useNavigate();
 
 	useEffect(() => {
@@ -192,15 +213,21 @@ const FileUpload: React.FC = () => {
 				});
 			}
 
-			const completeUploadPayload = {
+			const completeUploadPayload:any = {
 				token: results.token,
 				files: results.urls.map((url: { filename: string, uploadURL: string, key: string }, index: number) => ({
 					filename: files[index].name,
 					size: files[index].size,
 					key: url.key,
 					contentType: files[index].type,
-				})),
-			}
+				})
+			),
+			
+		};
+		if(isAuthenticated)
+		{
+			completeUploadPayload.expiresInSeconds=selectedExpiry.value === 'forever'? null :selectedExpiry.value;//Rename "expiresinSecond" to the backend assigned
+		}
 
 			const completeUploadRes = await axios.post(
 				`${import.meta.env.VITE_API_BASE_URL}/api/v1/files/complete`,
@@ -254,6 +281,7 @@ const FileUpload: React.FC = () => {
 		setShareUrl('');
 		setQrCodeUrl('');
 		setTimeLeft({ hours: 1, minutes: 0, seconds: 0 });
+		setSelectedExpiry(Expiry_Options[0]);
 	};
 
 	// Format time for display
@@ -435,17 +463,59 @@ const FileUpload: React.FC = () => {
 													<motion.div
 														initial={{ opacity: 0, y: 10 }}
 														animate={{ opacity: 1, y: 0 }}
-														className="mt-4 flex items-center justify-between bg-s1/30 border border-s4/25 rounded-xl px-4 py-3 max-sm:px-3 max-sm:py-2"
+														className="mt-4 flex flex-col gap-3"
 													>
-														<div className="flex items-center gap-3 max-sm:gap-2">
-															<FileIcon className="text-p1 max-sm:size-4" size={20} />
-															<span className="text-p4 font-semibold text-base max-sm:text-sm">
+														<div className="flex items-center justify-between bg-s1/30 border border-s4/25 rounded-xl px-4 py-3 flex-shrink-0 max-sm:gap-2">
+															<div className='flex items-center gap-3'>
+															 <FileIcon className="text-p1 max-sm:size-4" size={20} />
+															 <span className="text-p4 font-semibold text-base max-sm:text-sm">
 																{files.length} {files.length === 1 ? 'file' : 'files'}
-															</span>
+															 </span>
+														    </div>
+														    <span className="text-p4/70 font-medium text-sm max-sm:text-xs">
+															   {formatFileSize(totalSize)}
+														    </span>
 														</div>
-														<span className="text-p4/70 font-medium text-sm max-sm:text-xs">
-															{formatFileSize(totalSize)}
-														</span>
+														<div className='bg-s1/30 border border-s4/25 rounded-xl px-4 py-3'>
+															<div className='flex items-center justify-between mb-2'>
+																<p className='text-p4 text-sm font-semibold flex items-center gap-2'>
+																	<span>Expires in</span>
+																    {!isLoading && !isAuthenticated && (<span className='text-[10px] px-2 py-0.5 rounded-full bg-s2/70 text-p5/80 uppercase'>
+																	  Login Required
+																	</span>
+																	)}
+	 															</p>
+															</div>
+															<div className='relative'>
+																<Select value={selectedExpiry.label} 
+																onValueChange={(value:string)=> {
+																const opt =Expiry_Options.find(o=>o.label ===value);
+																if (opt) setSelectedExpiry(opt);
+															}} 
+															disabled ={isLoading  || !isAuthenticated}>
+																<SelectTrigger disabled={isLoading || !isAuthenticated} className={`w-full bg-s1/40 border border-s4/25 rounded-xl px-4 py-2 text-sm text-p4 pr-8 appearance-none focus:outline-none focus:ring-2 focus:ring-p1/30 focus:border-p1/50 ${!isLoading && !isAuthenticated ? 'opacity-60 cursor-not-allowed': ''}`}>
+																
+																    <SelectValue placeholder = {isLoading?'Checking Login...': 'Select Expiry'} />
+																</SelectTrigger>
+																<SelectContent className="bg-s2 border border-s4/25 text-p4">
+																    {Expiry_Options.map((opt)=>(
+																		<SelectItem key={opt.label} value={opt.label} className="cursor-pointer bg-s2 hover:bg-s3 text-p4">
+																			{opt.label}
+																			{opt.free ? '-Free' : ' '}
+																		    
+																		</SelectItem>
+																	))}
+ 																</SelectContent>
+															</Select>
+															</div>
+															{ !isLoading && !isAuthenticated && (
+																<p className='mt-2 text-[11px] text-p4/60'>Guests use the default 1 hour expiry.{' '}
+																   <span className='underline cursor-pointer' onClick={()=> navigate('/register')}>
+                                                                       Create Account
+																   </span> to set custom durations.
+																</p>
+															)}
+														</div>
 													</motion.div>
 												)}
 											</div>
