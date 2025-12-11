@@ -35,3 +35,25 @@ export const encryptFileWithSessionKey = async (file: File, key: CryptoKey) => {
 		originalType: file.type,
 	};
 };
+
+// DECRYPT FILE
+export const decryptFileWithSessionKey = async (encryptedFile: Blob, key: CryptoKey) => {
+	// 1. Get raw bytes
+	const buffer = await encryptedFile.arrayBuffer();
+
+	// 2. Extract IV (First 12 bytes) and Data (Rest)
+	const iv = buffer.slice(0, 12);
+	const ciphertext = buffer.slice(12);
+
+	// 3. Decrypt
+	const decryptedBuffer = await window.crypto.subtle.decrypt(
+		{
+			name: 'AES-GCM',
+			iv: new Uint8Array(iv),
+		},
+		key,
+		ciphertext
+	);
+
+	return decryptedBuffer; // clean file data
+};
