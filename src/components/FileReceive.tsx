@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { decryptFileWithSessionKey, importKey, RSA_ALGORITHM, unwrapSessionKey } from '@/crypto';
 import { formatFileSize } from '@/lib/utils';
 import { receiveSchema } from '@/schema/file';
 import { type File, type ReceiveInput } from '@/types/file';
@@ -10,12 +11,15 @@ import { Download, File as FileIcon, Loader2, Inbox, CheckCircle2, Package } fro
 import React from 'react';
 import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 const FileReceive: React.FC = () => {
 	const [receivedFiles, setreceivedFiles] = useState<File[]>([]);
 	const [downloadingIndex, setDownloadingIndex] = useState<number | null>(null);
+	const [decryptionKey, setDecryptionKey] = useState<CryptoKey | null>(null);
 	const shareCode = useRef<string>('');
+	const navigate = useNavigate();
 	const {
 		register,
 		handleSubmit,
@@ -42,9 +46,39 @@ const FileReceive: React.FC = () => {
 		try {
 			shareCode.current = sharingCode;
 			const response = await axios.get(
-				`${import.meta.env.VITE_API_BASE_URL}/api/v1/share/${sharingCode}`
+				`${import.meta.env.VITE_API_BASE_URL}/api/v1/share/${sharingCode}`,
+				{ withCredentials: true }
 			);
-			setreceivedFiles(response?.data?.data?.files);
+			const { files, encrypted_key } = response?.data?.data || {};
+
+			if (!encrypted_key) {
+				// If no key, either it's an old unencrypted transfer or error
+				console.log(
+					'Missing encryption key for transfer. Possibly old unencrypted transfer or incorrect client.'
+				);
+				throw new Error(
+					'Unable to decrypt this file. Please check your access link or try again.'
+				);
+			}
+
+			// Load User's Private Key from Storage
+			const storedJWK = sessionStorage.getItem('file_access_key');
+			if (!storedJWK) {
+				throw new Error('Decryption key not found. Please Login again.');
+			}
+
+			// Rehydrate Private Key
+			const privateKey = await importKey(JSON.parse(storedJWK), 'jwk', RSA_ALGORITHM, true, [
+				'decrypt',
+				'unwrapKey',
+			]);
+
+			// Unwrap the Session Key (Digital Envelope)
+			const sessionKey = await unwrapSessionKey(encrypted_key, privateKey);
+
+			// Store in State for downloads
+			setDecryptionKey(sessionKey);
+			setreceivedFiles(files);
 			toast.success('Files received successfully');
 		} catch (error: unknown) {
 			if (axios.isAxiosError(error)) {
@@ -60,27 +94,42 @@ const FileReceive: React.FC = () => {
 	const onSubmit = async ({ sharingCode }: ReceiveInput) => {
 		await fetchFiles(sharingCode);
 		reset();
+		navigate('/share/receive');
 	};
 
 	const handleDownload = async (index: number) => {
 		try {
+			if (!decryptionKey) {
+				toast.error('Decryption key missing. Refresh or Login.');
+				return;
+			}
+
 			setDownloadingIndex(index);
 
-			// 1. Request presigned download URL
+			// Request presigned download URL
 			const response = await axios.get(
-				`${import.meta.env.VITE_API_BASE_URL}/api/v1/share/${shareCode.current}/presign-download/${index}`
+				`${import.meta.env.VITE_API_BASE_URL}/api/v1/share/${shareCode.current}/presign-download/${index}`,
+				{ withCredentials: true }
 			);
 
 			const { url, content_type, filename } = response.data?.data || {};
 			if (!url) throw new Error('Download URL not received');
 
-			// 2. Fetch the file directly from R2 using the presigned URL
+			// Fetch the file directly from R2 using the presigned URL
 			const fileResponse = await axios.get(url, {
 				responseType: 'blob',
 			});
 
-			// 3. Create object URL and trigger download
-			const blob = new Blob([fileResponse.data], { type: content_type || 'application/octet-stream' });
+			// DECRYPT FILE LOCALLY
+			const decryptedBuffer = await decryptFileWithSessionKey(
+				fileResponse.data,
+				decryptionKey
+			);
+
+			// Create object URL and trigger download
+			const blob = new Blob([decryptedBuffer], {
+				type: content_type || 'application/octet-stream',
+			});
 			const objectUrl = window.URL.createObjectURL(blob);
 			const a = document.createElement('a');
 			a.href = objectUrl;
@@ -149,7 +198,8 @@ const FileReceive: React.FC = () => {
 						Receive Files
 					</h1>
 					<p className="text-p4/70 text-base max-md:text-sm max-sm:text-xs">
-						Enter the sharing code to access and download files shared with you securely.
+						Enter the sharing code to access and download files shared with you
+						securely.
 					</p>
 				</motion.header>
 
@@ -287,9 +337,15 @@ const FileReceive: React.FC = () => {
 											{/* Files Stats */}
 											<div className="flex items-center justify-between mb-4 bg-s1/30 border border-s4/25 rounded-xl px-4 py-3 flex-shrink-0">
 												<div className="flex items-center gap-3">
-													<CheckCircle2 className="text-green-400" size={20} />
+													<CheckCircle2
+														className="text-green-400"
+														size={20}
+													/>
 													<span className="text-p4 font-semibold text-sm">
-														{receivedFiles.length} {receivedFiles.length === 1 ? 'file' : 'files'}
+														{receivedFiles.length}{' '}
+														{receivedFiles.length === 1
+															? 'file'
+															: 'files'}
 													</span>
 												</div>
 												<span className="text-p4/70 font-medium text-sm">
@@ -309,14 +365,22 @@ const FileReceive: React.FC = () => {
 													>
 														<div className="flex items-center gap-3 flex-1 min-w-0">
 															<div className="bg-gradient-to-br from-purple-500/20 to-blue-500/20 p-2.5 rounded-lg flex-shrink-0">
-																<FileIcon className="text-p1" size={20} />
+																<FileIcon
+																	className="text-p1"
+																	size={20}
+																/>
 															</div>
 															<div className="flex-1 min-w-0">
-																<p title={file.name} className="text-p4 truncate font-medium text-sm mb-0.5">
+																<p
+																	title={file.name}
+																	className="text-p4 truncate font-medium text-sm mb-0.5"
+																>
 																	{file.name}
 																</p>
 																<p className="text-p4/60 text-xs">
-																	{formatFileSize(Number(file.size))}
+																	{formatFileSize(
+																		Number(file.size)
+																	)}
 																</p>
 															</div>
 														</div>
@@ -329,9 +393,15 @@ const FileReceive: React.FC = () => {
 															title="Download file"
 														>
 															{downloadingIndex === index ? (
-																<Loader2 className="text-green-400 animate-spin" size={16} />
+																<Loader2
+																	className="text-green-400 animate-spin"
+																	size={16}
+																/>
 															) : (
-																<Download className="text-green-400" size={16} />
+																<Download
+																	className="text-green-400"
+																	size={16}
+																/>
 															)}
 														</Button>
 													</motion.div>

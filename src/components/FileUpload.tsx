@@ -1,17 +1,34 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+	encryptFileWithSessionKey,
+	generateSessionKey,
+	importKey,
+	wrapSessionKeyForRecipient,
+	base64ToArrayBuffer,
+	RSA_ALGORITHM,
+} from '@/crypto';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Trash2, Copy, Share2, FileIcon, CheckCircle2, Link as LinkIcon } from 'lucide-react';
+import {
+	Upload,
+	Trash2,
+	Copy,
+	Share2,
+	FileIcon,
+	CheckCircle2,
+	Link as LinkIcon,
+} from 'lucide-react';
 import { Loader2 } from 'lucide-react';
+import QRCode from 'qrcode';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import QRCode from 'qrcode';
 
 const FileUpload: React.FC = () => {
 	const [files, setFiles] = useState<File[]>([]);
 	const [shareCode, setShareCode] = useState<string>('');
+	const [recipientPubKey, setRecipientPubKey] = useState<string>('');
 	const [shareUrl, setShareUrl] = useState<string>('');
 	const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
 	const [isUploading, setIsUploading] = useState<boolean>(false);
@@ -21,7 +38,7 @@ const FileUpload: React.FC = () => {
 	const [timeLeft, setTimeLeft] = useState<{ hours: number; minutes: number; seconds: number }>({
 		hours: 1,
 		minutes: 0,
-		seconds: 0
+		seconds: 0,
 	});
 	const navigate = useNavigate();
 
@@ -57,7 +74,7 @@ const FileUpload: React.FC = () => {
 		setTimeLeft({ hours: 1, minutes: 0, seconds: 0 });
 
 		const timer = setInterval(() => {
-			setTimeLeft(prev => {
+			setTimeLeft((prev) => {
 				const { hours, minutes, seconds } = prev;
 
 				if (hours === 0 && minutes === 0 && seconds === 0) {
@@ -87,8 +104,8 @@ const FileUpload: React.FC = () => {
 				margin: 2,
 				color: {
 					dark: '#FFFFFF',
-					light: '#0F172A'
-				}
+					light: '#0F172A',
+				},
 			});
 			setQrCodeUrl(qrCodeDataUrl);
 		} catch (error) {
@@ -156,56 +173,96 @@ const FileUpload: React.FC = () => {
 	const handleUpload = async () => {
 		try {
 			if (!files.length) {
-				toast.error("No files selected");
+				toast.error('No files selected');
+				return;
+			}
+
+			// Extract public keys for comma separated list
+			const recipientPubKeys = recipientPubKey.split(',').map((key) => key.trim());
+			if (recipientPubKeys.length === 0) {
+				toast.error('No recipient public keys provided');
 				return;
 			}
 
 			const maxUploadSize = 100 << 20; // 100 MB
 
 			if (files.reduce((acc, file) => acc + file.size, 0) > maxUploadSize) {
-				toast.error("Total file size exceeds 100MB limit");
+				toast.error('Total file size exceeds 100MB limit');
 				return;
 			}
 
 			setIsUploading(true);
+
+			const sessionKey = await generateSessionKey();
+
+			const encryptedFiles = await Promise.all(
+				files.map(async (file) => {
+					return encryptFileWithSessionKey(file, sessionKey);
+				})
+			);
+
+			// DIGITAL ENVELOPS: Wrap AES key with recipient's public key
+			const wrappedKeys = await Promise.all(
+				recipientPubKeys.map(async (pubKey) => {
+					const importedPubKey = await importKey(
+						base64ToArrayBuffer(pubKey),
+						'spki',
+						RSA_ALGORITHM,
+						true,
+						['wrapKey']
+					);
+					const wrappedKey = await wrapSessionKeyForRecipient(sessionKey, importedPubKey);
+					return {
+						publicKey: pubKey,
+						encryptedKey: wrappedKey,
+					};
+				})
+			);
+
 			// 1. Request presigned URLs
-			const payload = files.map((file) => ({
-				filename: file.name,
-				size: file.size,
+			const payload = encryptedFiles.map((file) => ({
+				filename: file.originalName,
+				size: file.encryptedBlob.size,
 			}));
 
 			const res = await axios.post(
 				`${import.meta.env.VITE_API_BASE_URL}/api/v1/files/presign`,
-				payload
+				payload,
+				{ withCredentials: true }
 			);
 
 			const results = res.data?.data; // backend returns array of { filename, uploadURL, key }
-			if (!Array.isArray(results.urls)) throw new Error("Invalid response from server");
+			if (!Array.isArray(results.urls)) throw new Error('Invalid response from server');
 
-			for (let i = 0; i < files.length; i++) {
-				const file = files[i];
+			for (let i = 0; i < encryptedFiles.length; i++) {
+				const file = encryptedFiles[i];
+
 				const { uploadURL } = results.urls[i];
-				await axios.put(uploadURL, file, {
+				await axios.put(uploadURL, file.encryptedBlob, {
 					headers: {
-						"Content-Type": file.type || "application/octet-stream",
+						'Content-Type': 'application/octet-stream',
 					},
 				});
 			}
 
 			const completeUploadPayload = {
 				token: results.token,
-				files: results.urls.map((url: { filename: string, uploadURL: string, key: string }, index: number) => ({
-					filename: files[index].name,
-					size: files[index].size,
-					key: url.key,
-					contentType: files[index].type,
-				})),
-			}
+				files: results.urls.map(
+					(url: { filename: string; uploadURL: string; key: string }, index: number) => ({
+						filename: files[index].name,
+						size: encryptedFiles[index].encryptedBlob.size,
+						key: url.key,
+						contentType: files[index].type,
+					})
+				),
+				recipientKeys: wrappedKeys,
+			};
 
 			const completeUploadRes = await axios.post(
 				`${import.meta.env.VITE_API_BASE_URL}/api/v1/files/complete`,
 				completeUploadPayload,
 				{
+					withCredentials: true,
 					headers: {
 						'Content-Type': 'application/json',
 					},
@@ -291,7 +348,7 @@ const FileUpload: React.FC = () => {
 								transition={{
 									duration: 0.5,
 									repeat: Infinity,
-									ease: 'easeInOut'
+									ease: 'easeInOut',
 								}}
 							>
 								<Upload className="text-p1 mx-auto mb-6" size={120} />
@@ -310,12 +367,12 @@ const FileUpload: React.FC = () => {
 								<motion.div
 									className="h-full bg-gradient-to-r from-purple-500 to-blue-500"
 									animate={{
-										x: ['-100%', '100%']
+										x: ['-100%', '100%'],
 									}}
 									transition={{
 										duration: 1.5,
 										repeat: Infinity,
-										ease: 'easeInOut'
+										ease: 'easeInOut',
 									}}
 								/>
 							</motion.div>
@@ -362,16 +419,12 @@ const FileUpload: React.FC = () => {
 					className="pt-8 pb-6 px-6 text-center max-w-4xl mx-auto w-full"
 				>
 					<h1 className="text-5xl font-bold mb-3 text-p4 max-md:text-4xl max-sm:text-3xl">
-						{uploadComplete
-							? ''
-							: 'Upload Files'
-						}
+						{uploadComplete ? '' : 'Upload Files'}
 					</h1>
 					<p className="text-p4/70 text-base max-md:text-sm max-sm:text-xs">
 						{uploadComplete
 							? ''
-							: 'Securely upload and share your files with anyone. Generate instant share links with QR codes for easy access.'
-						}
+							: 'Securely upload and share your files with anyone. Generate instant share links with QR codes for easy access.'}
 					</p>
 				</motion.header>
 
@@ -412,7 +465,10 @@ const FileUpload: React.FC = () => {
 															whileHover={{ scale: 1.1 }}
 															transition={{ duration: 0.2 }}
 														>
-															<Upload className="text-p4/60 mb-3 group-hover:text-p1 transition-colors duration-300 max-sm:size-8" size={48} />
+															<Upload
+																className="text-p4/60 mb-3 group-hover:text-p1 transition-colors duration-300 max-sm:size-8"
+																size={48}
+															/>
 														</motion.div>
 														<p className="text-p4 font-semibold text-xl mb-2 max-sm:text-lg max-sm:text-center">
 															Click to upload files
@@ -438,9 +494,15 @@ const FileUpload: React.FC = () => {
 														className="mt-4 flex items-center justify-between bg-s1/30 border border-s4/25 rounded-xl px-4 py-3 max-sm:px-3 max-sm:py-2"
 													>
 														<div className="flex items-center gap-3 max-sm:gap-2">
-															<FileIcon className="text-p1 max-sm:size-4" size={20} />
+															<FileIcon
+																className="text-p1 max-sm:size-4"
+																size={20}
+															/>
 															<span className="text-p4 font-semibold text-base max-sm:text-sm">
-																{files.length} {files.length === 1 ? 'file' : 'files'}
+																{files.length}{' '}
+																{files.length === 1
+																	? 'file'
+																	: 'files'}
 															</span>
 														</div>
 														<span className="text-p4/70 font-medium text-sm max-sm:text-xs">
@@ -449,6 +511,13 @@ const FileUpload: React.FC = () => {
 													</motion.div>
 												)}
 											</div>
+											<Input
+												type="text"
+												placeholder="Enter recipient's public key"
+												value={recipientPubKey}
+												onChange={(e) => setRecipientPubKey(e.target.value)}
+												className="mt-4 w-full border-s4/25 rounded-xl py-6 focus:border-p1/50 focus:bg-s1/30 focus:outline-none focus:ring-2 focus:ring-s1/70 transition-all duration-300 max-md:py-4 max-sm:py-2"
+											/>
 										</div>
 
 										{/* Action Buttons */}
@@ -469,10 +538,12 @@ const FileUpload: React.FC = () => {
 															backgroundPosition: '0% 0%',
 														}}
 														onMouseEnter={(e) => {
-															e.currentTarget.style.backgroundPosition = '100% 0%';
+															e.currentTarget.style.backgroundPosition =
+																'100% 0%';
 														}}
 														onMouseLeave={(e) => {
-															e.currentTarget.style.backgroundPosition = '0% 0%';
+															e.currentTarget.style.backgroundPosition =
+																'0% 0%';
 														}}
 													>
 														{isUploading ? (
@@ -512,15 +583,25 @@ const FileUpload: React.FC = () => {
 
 											<div className="relative z-10 h-full flex flex-col">
 												<h2 className="text-xl font-bold text-p4 mb-4 flex items-center gap-2 flex-shrink-0 max-sm:text-lg">
-													<FileIcon className="text-p1 max-sm:size-5" size={24} />
+													<FileIcon
+														className="text-p1 max-sm:size-5"
+														size={24}
+													/>
 													Selected Files
 												</h2>
 
 												{files.length === 0 ? (
 													<div className="flex-1 flex flex-col items-center justify-center text-center py-12 max-sm:py-8">
-														<FileIcon className="text-p4/30 mb-4 max-sm:size-10" size={56} />
-														<p className="text-p4/60 text-base max-sm:text-sm">No files selected yet</p>
-														<p className="text-p4/40 text-sm mt-2 max-sm:text-xs">Upload files to see them here</p>
+														<FileIcon
+															className="text-p4/30 mb-4 max-sm:size-10"
+															size={56}
+														/>
+														<p className="text-p4/60 text-base max-sm:text-sm">
+															No files selected yet
+														</p>
+														<p className="text-p4/40 text-sm mt-2 max-sm:text-xs">
+															Upload files to see them here
+														</p>
 													</div>
 												) : (
 													<div className="flex-1 overflow-y-auto space-y-2.5 pr-2 custom-scrollbar min-h-0">
@@ -535,14 +616,22 @@ const FileUpload: React.FC = () => {
 															>
 																<div className="flex items-center gap-3 flex-1 min-w-0">
 																	<div className="bg-gradient-to-br from-purple-500/20 to-blue-500/20 p-2.5 rounded-lg flex-shrink-0 max-sm:p-2">
-																		<FileIcon className="text-p1 max-sm:size-4" size={20} />
+																		<FileIcon
+																			className="text-p1 max-sm:size-4"
+																			size={20}
+																		/>
 																	</div>
 																	<div className="flex-1 min-w-0">
-																		<p title={file.name} className="text-p4 truncate font-medium text-sm mb-0.5 max-sm:text-xs">
+																		<p
+																			title={file.name}
+																			className="text-p4 truncate font-medium text-sm mb-0.5 max-sm:text-xs"
+																		>
 																			{file.name}
 																		</p>
 																		<p className="text-p4/60 text-xs max-sm:text-[10px]">
-																			{formatFileSize(file.size)}
+																			{formatFileSize(
+																				file.size
+																			)}
 																		</p>
 																	</div>
 																</div>
@@ -550,9 +639,14 @@ const FileUpload: React.FC = () => {
 																	variant="ghost"
 																	size="icon"
 																	className="bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg flex-shrink-0 ml-3 h-9 w-9 opacity-0 group-hover:opacity-100 transition-opacity max-sm:h-7 max-sm:w-7 max-sm:ml-2 max-sm:opacity-100"
-																	onClick={() => handleRemove(index)}
+																	onClick={() =>
+																		handleRemove(index)
+																	}
 																>
-																	<Trash2 className="text-red-400 max-sm:size-3" size={16} />
+																	<Trash2
+																		className="text-red-400 max-sm:size-3"
+																		size={16}
+																	/>
 																</Button>
 															</motion.div>
 														))}
@@ -579,9 +673,16 @@ const FileUpload: React.FC = () => {
 										<motion.div
 											initial={{ scale: 0 }}
 											animate={{ scale: 1 }}
-											transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+											transition={{
+												delay: 0.2,
+												type: 'spring',
+												stiffness: 200,
+											}}
 										>
-											<CheckCircle2 className="text-green-400 mx-auto mb-3 max-sm:size-10" size={48} />
+											<CheckCircle2
+												className="text-green-400 mx-auto mb-3 max-sm:size-10"
+												size={48}
+											/>
 										</motion.div>
 										<h2 className="text-3xl font-bold text-p4 mb-2 max-md:text-2xl max-sm:text-xl">
 											Files Uploaded Successfully!
@@ -592,8 +693,6 @@ const FileUpload: React.FC = () => {
 									</div>
 
 									<div className="flex-1 overflow-y-auto p-6 space-y-6 max-sm:p-4 max-sm:space-y-4">
-
-
 										{/* QR Code and Share Details Grid */}
 										<div className="grid lg:grid-cols-2 gap-6 max-lg:grid-cols-1">
 											{/* QR Code Section */}
@@ -607,7 +706,10 @@ const FileUpload: React.FC = () => {
 														/>
 													) : (
 														<div className="w-48 h-48 bg-s1/30 rounded-lg flex items-center justify-center max-sm:w-40 max-sm:h-40">
-															<Loader2 className="text-p1 animate-spin" size={32} />
+															<Loader2
+																className="text-p1 animate-spin"
+																size={32}
+															/>
 														</div>
 													)}
 												</div>
@@ -624,10 +726,12 @@ const FileUpload: React.FC = () => {
 															backgroundPosition: '0% 0%',
 														}}
 														onMouseEnter={(e) => {
-															e.currentTarget.style.backgroundPosition = '100% 0%';
+															e.currentTarget.style.backgroundPosition =
+																'100% 0%';
 														}}
 														onMouseLeave={(e) => {
-															e.currentTarget.style.backgroundPosition = '0% 0%';
+															e.currentTarget.style.backgroundPosition =
+																'0% 0%';
 														}}
 													>
 														<Upload className="mr-2 h-5 w-5 max-sm:size-4" />
@@ -641,7 +745,10 @@ const FileUpload: React.FC = () => {
 												{/* Share Code */}
 												<div>
 													<label className="flex items-center gap-2 text-sm font-semibold text-p4 mb-2 max-sm:text-xs">
-														<LinkIcon size={16} className="text-p1 max-sm:size-4" />
+														<LinkIcon
+															size={16}
+															className="text-p1 max-sm:size-4"
+														/>
 														Share Code
 													</label>
 													<div className="flex items-center gap-2 w-full">
@@ -655,11 +762,16 @@ const FileUpload: React.FC = () => {
 															size="icon"
 															className="bg-s1/30 hover:bg-s1/40 border-2 border-s4/25 rounded-xl h-12 w-12 cursor-pointer flex-shrink-0 max-sm:h-10 max-sm:w-10"
 															onClick={() => {
-																navigator.clipboard.writeText(shareCode);
+																navigator.clipboard.writeText(
+																	shareCode
+																);
 																toast.success('Code copied!');
 															}}
 														>
-															<Copy className="text-p1 max-sm:size-4" size={18} />
+															<Copy
+																className="text-p1 max-sm:size-4"
+																size={18}
+															/>
 														</Button>
 													</div>
 												</div>
@@ -667,7 +779,10 @@ const FileUpload: React.FC = () => {
 												{/* Share URL */}
 												<div>
 													<label className="flex items-center gap-2 text-sm font-semibold text-p4 mb-2 max-sm:text-xs">
-														<Share2 size={16} className="text-p1 max-sm:size-4" />
+														<Share2
+															size={16}
+															className="text-p1 max-sm:size-4"
+														/>
 														Share URL
 													</label>
 													<div className="flex items-center gap-2 w-full">
@@ -681,11 +796,16 @@ const FileUpload: React.FC = () => {
 															size="icon"
 															className="bg-s1/30 hover:bg-s1/40 border-2 border-s4/25 rounded-xl h-12 w-12 cursor-pointer flex-shrink-0 max-sm:h-10 max-sm:w-10"
 															onClick={() => {
-																navigator.clipboard.writeText(shareUrl);
+																navigator.clipboard.writeText(
+																	shareUrl
+																);
 																toast.success('URL copied!');
 															}}
 														>
-															<Copy className="text-p1 max-sm:size-4" size={18} />
+															<Copy
+																className="text-p1 max-sm:size-4"
+																size={18}
+															/>
 														</Button>
 														<Button
 															variant="ghost"
@@ -693,7 +813,10 @@ const FileUpload: React.FC = () => {
 															className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 hover:from-purple-500/30 hover:to-blue-500/30 border-2 border-p1/30 rounded-xl h-12 w-12 cursor-pointer flex-shrink-0 max-sm:h-10 max-sm:w-10"
 															onClick={handleShare}
 														>
-															<Share2 className="text-p1 max-sm:size-4" size={18} />
+															<Share2
+																className="text-p1 max-sm:size-4"
+																size={18}
+															/>
 														</Button>
 													</div>
 												</div>
@@ -712,33 +835,47 @@ const FileUpload: React.FC = () => {
 																		{formatTime(timeLeft.hours)}
 																	</div>
 																</div>
-																<div className="text-p4/70 text-xs mt-1 max-sm:text-[10px]">Hours</div>
+																<div className="text-p4/70 text-xs mt-1 max-sm:text-[10px]">
+																	Hours
+																</div>
 															</div>
 
 															{/* Separator */}
-															<div className="text-xl font-bold text-orange-400 -mt-3 max-sm:-mt-2">:</div>
+															<div className="text-xl font-bold text-orange-400 -mt-3 max-sm:-mt-2">
+																:
+															</div>
 
 															{/* Minutes */}
 															<div className="text-center">
 																<div className="bg-slate-800/50 border border-orange-500/30 rounded-xl px-3 py-2 min-w-[60px] max-sm:min-w-[50px]">
 																	<div className="text-2xl font-bold text-orange-400 font-mono max-sm:text-xl">
-																		{formatTime(timeLeft.minutes)}
+																		{formatTime(
+																			timeLeft.minutes
+																		)}
 																	</div>
 																</div>
-																<div className="text-p4/70 text-xs mt-1 max-sm:text-[10px]">Minutes</div>
+																<div className="text-p4/70 text-xs mt-1 max-sm:text-[10px]">
+																	Minutes
+																</div>
 															</div>
 
 															{/* Separator */}
-															<div className="text-xl font-bold text-orange-400 -mt-3 max-sm:-mt-2">:</div>
+															<div className="text-xl font-bold text-orange-400 -mt-3 max-sm:-mt-2">
+																:
+															</div>
 
 															{/* Seconds */}
 															<div className="text-center">
 																<div className="bg-slate-800/50 border border-orange-500/30 rounded-xl px-3 py-2 min-w-[60px] max-sm:min-w-[50px]">
 																	<div className="text-2xl font-bold text-orange-400 font-mono max-sm:text-xl">
-																		{formatTime(timeLeft.seconds)}
+																		{formatTime(
+																			timeLeft.seconds
+																		)}
 																	</div>
 																</div>
-																<div className="text-p4/70 text-xs mt-1 max-sm:text-[10px]">Seconds</div>
+																<div className="text-p4/70 text-xs mt-1 max-sm:text-[10px]">
+																	Seconds
+																</div>
 															</div>
 														</div>
 													</div>
