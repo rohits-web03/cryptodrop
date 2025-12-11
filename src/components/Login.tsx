@@ -71,7 +71,7 @@ const Login: React.FC = () => {
 
 			toast.success('Login Successful');
 			reset();
-			navigate('/dashboard', { replace: true });
+			navigate('/share/send', { replace: true });
 		} catch (error: unknown) {
 			console.error('Login Error:', error);
 			toast.error(
