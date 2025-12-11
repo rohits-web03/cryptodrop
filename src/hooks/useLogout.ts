@@ -5,7 +5,11 @@ export const useLogout = () => {
 	const logout = async () => {
 		try {
 			// Attempt to kill session from server
-			await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/v1/auth/logout`);
+			await axios.post(
+				`${import.meta.env.VITE_API_BASE_URL}/api/v1/logout`,
+				{},
+				{ withCredentials: true }
+			);
 
 			toast.success('Logged out successfully');
 		} catch (error) {
@@ -19,7 +23,7 @@ export const useLogout = () => {
 			This forces the browser to dump the JS Heap (RAM),
 			ensuring no private keys remain in memory variables.
             */
-			window.location.href = '/auth/login';
+			window.location.href = '/login';
 		}
 	};
 

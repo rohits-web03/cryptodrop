@@ -7,11 +7,11 @@ import { type File, type ReceiveInput } from '@/types/file';
 import { zodResolver } from '@hookform/resolvers/zod';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, File as FileIcon, Loader2, Inbox, CheckCircle2, Package } from 'lucide-react';
+import { Download, File as FileIcon, Loader2, Inbox, CheckCircle2, Package, ChevronLeft } from 'lucide-react';
 import React from 'react';
 import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 
 const FileReceive: React.FC = () => {
@@ -169,7 +169,7 @@ const FileReceive: React.FC = () => {
 						repeat: Infinity,
 						ease: 'easeInOut',
 					}}
-					className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-purple-500/30 rounded-full blur-3xl"
+					className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-purple-500/30 rounded-full blur-3xl max-md:w-[300px] max-md:h-[300px]"
 				/>
 				<motion.div
 					animate={{
@@ -182,11 +182,22 @@ const FileReceive: React.FC = () => {
 						ease: 'easeInOut',
 						delay: 3,
 					}}
-					className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-blue-500/30 rounded-full blur-3xl"
+					className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-blue-500/30 rounded-full blur-3xl max-md:w-[300px] max-md:h-[300px]"
 				/>
 			</div>
 
 			<div className="relative z-10 min-h-screen">
+				{/* Breadcrumb */}
+									<div className="mb-4 mt-8 mx-4 px-2 max-sm:px-0">
+										<Link
+											to="/dashboard"
+											className="inline-flex items-center gap-2 text-p4/70 hover:text-p4 transition-colors text-sm rounded-md px-2 py-1"
+											aria-label="Back to dashboard"
+										>
+											<ChevronLeft size={16} className="text-p1" />
+											<span>Back to dashboard</span>
+										</Link>
+									</div>
 				{/* Header */}
 				<motion.header
 					initial={{ opacity: 0, y: -20 }}
@@ -194,6 +205,8 @@ const FileReceive: React.FC = () => {
 					transition={{ duration: 0.6 }}
 					className="pt-8 pb-6 px-6 text-center max-w-4xl mx-auto"
 				>
+					
+
 					<h1 className="text-5xl font-bold mb-3 text-p4 max-md:text-4xl max-sm:text-3xl">
 						Receive Files
 					</h1>
@@ -222,9 +235,7 @@ const FileReceive: React.FC = () => {
 									<div className="bg-gradient-to-br from-purple-500/20 to-blue-500/20 p-3 rounded-xl">
 										<Package className="text-p1" size={24} />
 									</div>
-									<h2 className="text-xl font-bold text-p4">
-										Enter Sharing Code
-									</h2>
+									<h2 className="text-xl font-bold text-p4">Enter Sharing Code</h2>
 								</div>
 
 								<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -319,12 +330,8 @@ const FileReceive: React.FC = () => {
 											>
 												<Inbox className="text-p4/30 mb-4" size={80} />
 											</motion.div>
-											<p className="text-p4/60 text-base font-medium mb-2">
-												No Files Yet
-											</p>
-											<p className="text-p4/40 text-sm">
-												Enter a sharing code to access files
-											</p>
+											<p className="text-p4/60 text-base font-medium mb-2">No Files Yet</p>
+											<p className="text-p4/40 text-sm">Enter a sharing code to access files</p>
 										</motion.div>
 									) : (
 										<motion.div
@@ -337,15 +344,10 @@ const FileReceive: React.FC = () => {
 											{/* Files Stats */}
 											<div className="flex items-center justify-between mb-4 bg-s1/30 border border-s4/25 rounded-xl px-4 py-3 flex-shrink-0">
 												<div className="flex items-center gap-3">
-													<CheckCircle2
-														className="text-green-400"
-														size={20}
-													/>
+													<CheckCircle2 className="text-green-400" size={20} />
 													<span className="text-p4 font-semibold text-sm">
 														{receivedFiles.length}{' '}
-														{receivedFiles.length === 1
-															? 'file'
-															: 'files'}
+														{receivedFiles.length === 1 ? 'file' : 'files'}
 													</span>
 												</div>
 												<span className="text-p4/70 font-medium text-sm">
@@ -365,23 +367,13 @@ const FileReceive: React.FC = () => {
 													>
 														<div className="flex items-center gap-3 flex-1 min-w-0">
 															<div className="bg-gradient-to-br from-purple-500/20 to-blue-500/20 p-2.5 rounded-lg flex-shrink-0">
-																<FileIcon
-																	className="text-p1"
-																	size={20}
-																/>
+																<FileIcon className="text-p1" size={20} />
 															</div>
 															<div className="flex-1 min-w-0">
-																<p
-																	title={file.name}
-																	className="text-p4 truncate font-medium text-sm mb-0.5"
-																>
+																<p title={file.name} className="text-p4 truncate font-medium text-sm mb-0.5">
 																	{file.name}
 																</p>
-																<p className="text-p4/60 text-xs">
-																	{formatFileSize(
-																		Number(file.size)
-																	)}
-																</p>
+																<p className="text-p4/60 text-xs">{formatFileSize(Number(file.size))}</p>
 															</div>
 														</div>
 														<Button
@@ -393,44 +385,14 @@ const FileReceive: React.FC = () => {
 															title="Download file"
 														>
 															{downloadingIndex === index ? (
-																<Loader2
-																	className="text-green-400 animate-spin"
-																	size={16}
-																/>
+																<Loader2 className="text-green-400 animate-spin" size={16} />
 															) : (
-																<Download
-																	className="text-green-400"
-																	size={16}
-																/>
+																<Download className="text-green-400" size={16} />
 															)}
 														</Button>
 													</motion.div>
 												))}
 											</div>
-
-											{/* Download All Button */}
-											{/* {receivedFiles.length > 1 && (
-												<motion.div
-													initial={{ opacity: 0, y: 20 }}
-													animate={{ opacity: 1, y: 0 }}
-													transition={{ delay: 0.3 }}
-													className="flex-shrink-0"
-												>
-													<Button
-														onClick={async () => {
-															for (let i = 0; i < receivedFiles.length; i++) {
-																await handleDownload(i);
-																await new Promise(resolve => setTimeout(resolve, 500));
-															}
-														}}
-														disabled={downloadingIndex !== null}
-														className="w-full py-3 text-sm border-2 border-s4/25 bg-s1/20 text-p4 rounded-xl hover:bg-s1/40 hover:border-p1/30 transition-all duration-300 cursor-pointer font-semibold"
-													>
-														<Download className="mr-2 h-4 w-4" />
-														Download All Files
-													</Button>
-												</motion.div>
-											)} */}
 										</motion.div>
 									)}
 								</AnimatePresence>
