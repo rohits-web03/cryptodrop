@@ -18,11 +18,12 @@ import {
 	FileIcon,
 	CheckCircle2,
 	Link as LinkIcon,
+	ChevronLeft,
 } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 import QRCode from 'qrcode';
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 
 const FileUpload: React.FC = () => {
@@ -411,6 +412,17 @@ const FileUpload: React.FC = () => {
 			</div>
 
 			<div className="relative z-10 min-h-screen flex flex-col">
+				{/* Breadcrumb */}
+					<div className="mb-4 mt-8 mx-4 px-2 max-sm:px-0">
+						<Link
+							to="/dashboard"
+							className="inline-flex items-center gap-2 text-p4/70 hover:text-p4 transition-colors text-sm rounded-md px-2 py-1"
+							aria-label="Back to dashboard"
+						>
+							<ChevronLeft size={16} className="text-p1" />
+							<span>Back to dashboard</span>
+						</Link>
+					</div>
 				{/* Header */}
 				<motion.header
 					initial={{ opacity: 0, y: -20 }}
@@ -418,6 +430,8 @@ const FileUpload: React.FC = () => {
 					transition={{ duration: 0.6 }}
 					className="pt-8 pb-6 px-6 text-center max-w-4xl mx-auto w-full"
 				>
+					
+
 					<h1 className="text-5xl font-bold mb-3 text-p4 max-md:text-4xl max-sm:text-3xl">
 						{uploadComplete ? '' : 'Upload Files'}
 					</h1>
