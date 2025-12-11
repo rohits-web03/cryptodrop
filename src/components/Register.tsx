@@ -2,16 +2,24 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+	deriveMasterKey,
+	exportKey,
+	deriveAuthToken,
+	generateUserKeyPair,
+	wrapPrivateKey,
+} from '@/crypto/keys';
 import { registerSchema } from '@/schema/auth';
 import type { RegisterFormFields } from '@/types/auth';
 import { zodResolver } from '@hookform/resolvers/zod';
+import axios, { AxiosError } from 'axios';
+import { motion } from 'framer-motion';
 import { User, Lock, Mail, Eye, EyeOff } from 'lucide-react';
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
 
 const Register: React.FC = () => {
 	const [showPassword, setShowPassword] = useState(false);
@@ -39,10 +47,56 @@ const Register: React.FC = () => {
 		}
 	}, [location.search, navigate]);
 
-	const onSubmit = (data: RegisterFormFields) => {
-		console.log('Form Data:', data);
-		toast.success('Registration Successful');
-		reset();
+	const onSubmit = async (data: RegisterFormFields) => {
+		try {
+			// Generate Crypto Identity
+			const userKeyPair = await generateUserKeyPair();
+
+			// Derive Master Key from Password (Client-Side Only)
+			// Note: using username as salt for now. Later, replace with random salt.
+			const masterKey = await deriveMasterKey(data.password, data.username);
+
+			// THE FORK: Create Auth Token
+			// This is what we send to the server as the "password"
+			const authHash = await deriveAuthToken(masterKey);
+
+			// Encrypt the Private Key (The Vault)
+			const wrappedPrivateKey = await wrapPrivateKey(userKeyPair.privateKey, masterKey);
+
+			// Export Public Key
+			const publicKeyString = await exportKey(userKeyPair.publicKey, 'spki');
+
+			// Prepare Payload
+			const payload = {
+				username: data.username,
+				email: data.email,
+				password: authHash, // Server just sees a hash, not the real password
+				publicKey: publicKeyString,
+				encryptedPrivateKey: JSON.stringify(wrappedPrivateKey),
+			};
+
+			// console.log("Sending Secure Payload:", payload);
+
+			const response = await axios.post(
+				`${import.meta.env.VITE_API_BASE_URL}/api/v1/auth/sign-up`,
+				payload
+			);
+			const result = response.data;
+			if (!result.success) {
+				throw new Error(result.message);
+			}
+			toast.success(result.message ?? 'Registration Successful');
+			reset();
+		} catch (error: unknown) {
+			console.error('Registration Error:', error);
+			toast.error(
+				error instanceof AxiosError
+					? error.response?.data?.message
+					: error instanceof Error
+						? error.message
+						: 'Failed to register user'
+			);
+		}
 	};
 
 	return (
@@ -94,12 +148,12 @@ const Register: React.FC = () => {
 							Join <b className="text-p1">Obscyra</b>
 						</h1>
 						<p className="text-xl text-p4/70 mb-8 leading-relaxed max-xl:text-lg">
-							Create your account to unlock secure, encrypted file sharing built for teams.
-							Simple setup, zero tracking, and complete control - from the first upload.
+							Create your account to unlock secure, encrypted file sharing built for
+							teams. Simple setup, zero tracking, and complete control - from the
+							first upload.
 						</p>
 						<div className="space-y-4">
 							<div className="flex items-center gap-4">
-
 								<div className="w-12 h-12 rounded-xl   flex items-center justify-center backdrop-blur-sm">
 									<img src="/images/detail-3.png" alt="" />
 								</div>
@@ -120,7 +174,6 @@ const Register: React.FC = () => {
 						</div>
 					</motion.div>
 				</div>
-
 			</motion.div>
 
 			{/* Right Side - Register Form */}
@@ -180,14 +233,21 @@ const Register: React.FC = () => {
 						</CardHeader>
 
 						<CardContent className="relative z-10 px-7 max-md:px-5">
-							<form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4 max-md:space-y-3">
+							<form
+								onSubmit={handleSubmit(onSubmit)}
+								noValidate
+								className="space-y-4 max-md:space-y-3"
+							>
 								{/* Username Field */}
 								<motion.div
 									initial={{ opacity: 0, x: -20 }}
 									animate={{ opacity: 1, x: 0 }}
 									transition={{ duration: 0.5, delay: 0.3 }}
 								>
-									<Label htmlFor="username" className="block text-xs font-medium text-p4 mb-1.5 max-sm:text-[10px]">
+									<Label
+										htmlFor="username"
+										className="block text-xs font-medium text-p4 mb-1.5 max-sm:text-[10px]"
+									>
 										Username
 									</Label>
 									<div className="relative">
@@ -216,7 +276,10 @@ const Register: React.FC = () => {
 									animate={{ opacity: 1, x: 0 }}
 									transition={{ duration: 0.5, delay: 0.4 }}
 								>
-									<Label htmlFor="email" className="block text-xs font-medium text-p4 mb-1.5 max-sm:text-[10px]">
+									<Label
+										htmlFor="email"
+										className="block text-xs font-medium text-p4 mb-1.5 max-sm:text-[10px]"
+									>
 										Email
 									</Label>
 									<div className="relative">
@@ -234,7 +297,9 @@ const Register: React.FC = () => {
 										/>
 									</div>
 									{errors.email && (
-										<p className="text-red-400 text-[10px] mt-1">{errors.email.message}</p>
+										<p className="text-red-400 text-[10px] mt-1">
+											{errors.email.message}
+										</p>
 									)}
 								</motion.div>
 
@@ -244,7 +309,10 @@ const Register: React.FC = () => {
 									animate={{ opacity: 1, x: 0 }}
 									transition={{ duration: 0.5, delay: 0.5 }}
 								>
-									<Label htmlFor="password" className="block text-xs font-medium text-p4 mb-1.5 max-sm:text-[10px]">
+									<Label
+										htmlFor="password"
+										className="block text-xs font-medium text-p4 mb-1.5 max-sm:text-[10px]"
+									>
 										Password
 									</Label>
 									<div className="relative">
@@ -267,7 +335,11 @@ const Register: React.FC = () => {
 											onClick={() => setShowPassword(!showPassword)}
 											className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-p4/60 hover:text-p4 hover:bg-transparent transition-colors duration-200"
 										>
-											{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+											{showPassword ? (
+												<EyeOff size={16} />
+											) : (
+												<Eye size={16} />
+											)}
 										</Button>
 									</div>
 									{errors.password && (
@@ -283,7 +355,10 @@ const Register: React.FC = () => {
 									animate={{ opacity: 1, x: 0 }}
 									transition={{ duration: 0.5, delay: 0.6 }}
 								>
-									<Label htmlFor="confirmPassword" className="block text-xs font-medium text-p4 mb-1.5 max-sm:text-[10px]">
+									<Label
+										htmlFor="confirmPassword"
+										className="block text-xs font-medium text-p4 mb-1.5 max-sm:text-[10px]"
+									>
 										Confirm Password
 									</Label>
 									<div className="relative">
@@ -303,10 +378,16 @@ const Register: React.FC = () => {
 											type="button"
 											variant="ghost"
 											size="icon"
-											onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+											onClick={() =>
+												setShowConfirmPassword(!showConfirmPassword)
+											}
 											className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-p4/60 hover:text-p4 hover:bg-transparent transition-colors duration-200"
 										>
-											{showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+											{showConfirmPassword ? (
+												<EyeOff size={16} />
+											) : (
+												<Eye size={16} />
+											)}
 										</Button>
 									</div>
 									{errors.confirmPassword && (
@@ -341,19 +422,21 @@ const Register: React.FC = () => {
 								</motion.div>
 
 								{/* Divider */}
-								<motion.div
+								{/* <motion.div
 									initial={{ opacity: 0 }}
 									animate={{ opacity: 1 }}
 									transition={{ duration: 0.5, delay: 0.8 }}
 									className="flex items-center my-4 max-md:my-3"
 								>
 									<hr className="flex-grow border-s4/25" />
-									<span className="px-3 text-p4/50 text-xs max-sm:text-[10px]">or</span>
+									<span className="px-3 text-p4/50 text-xs max-sm:text-[10px]">
+										or
+									</span>
 									<hr className="flex-grow border-s4/25" />
-								</motion.div>
+								</motion.div> */}
 
 								{/* Google Signup Button */}
-								<motion.div
+								{/* <motion.div
 									initial={{ opacity: 0, y: 10 }}
 									animate={{ opacity: 1, y: 0 }}
 									transition={{ duration: 0.5, delay: 0.9 }}
@@ -362,8 +445,7 @@ const Register: React.FC = () => {
 										type="button"
 										onClick={() => {
 											toast.info('Redirecting to Google signup...');
-											window.location.href =
-												'http://localhost:8080/api/v1/auth/google/login?redirect=register';
+											window.location.href = `${import.meta.env.VITE_API_BASE_URL}/api/v1/auth/google/login?redirect=register`;
 										}}
 										variant="outline"
 										className="w-full py-3 flex items-center justify-center gap-2.5 border-2 border-s4/25 bg-s1/20 text-p4 rounded-xl hover:bg-s1/40 hover:border-p1/30 transition-all duration-300 hover:scale-[1.02] cursor-pointer max-sm:py-2.5 max-sm:text-sm max-sm:gap-2"
@@ -375,7 +457,7 @@ const Register: React.FC = () => {
 										/>
 										<span className="font-medium">Sign Up with Google</span>
 									</Button>
-								</motion.div>
+								</motion.div> */}
 							</form>
 						</CardContent>
 

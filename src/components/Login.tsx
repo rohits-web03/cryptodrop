@@ -2,15 +2,17 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { deriveMasterKey, deriveAuthToken, unwrapPrivateKey, exportKey } from '@/crypto/keys';
 import { loginSchema } from '@/schema/auth';
 import type { LogInFormFields } from '@/types/auth';
 import { zodResolver } from '@hookform/resolvers/zod';
+import axios, { AxiosError } from 'axios';
+import { motion } from 'framer-motion';
 import { User, Lock, EyeOff, Eye } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
 
 const Login: React.FC = () => {
 	const {
@@ -35,10 +37,51 @@ const Login: React.FC = () => {
 		}
 	}, [location.search, navigate]);
 
-	const onSubmit = (data: LogInFormFields) => {
-		console.log('Login Data', data);
-		toast.success('Successfully Logged In');
-		reset();
+	const onSubmit = async (data: LogInFormFields) => {
+		try {
+			// RE-DERIVE MASTER KEY
+			const masterKey = await deriveMasterKey(data.password, data.username);
+
+			// RE-DERIVE AUTH HASH
+			const authHash = await deriveAuthToken(masterKey);
+
+			// SEND TO SERVER
+			const response = await axios.post(
+				`${import.meta.env.VITE_API_BASE_URL}/api/v1/auth/login`,
+				{
+					username: data.username,
+					password: authHash,
+				},
+				{
+					withCredentials: true,
+				}
+			);
+
+			const result = response.data;
+			if (!result.success) throw new Error(result.message);
+
+			// DECRYPT THE VAULT
+			if (result.data) {
+				const privateKey = await unwrapPrivateKey(result.data.private_key, masterKey);
+				const privateKeyVal = await exportKey(privateKey, 'jwk');
+				// Store in session storage
+				sessionStorage.setItem('file_access_key', JSON.stringify(privateKeyVal));
+				sessionStorage.setItem('public_key', result.data.public_key);
+			}
+
+			toast.success('Login Successful');
+			reset();
+			navigate('/dashboard', { replace: true });
+		} catch (error: unknown) {
+			console.error('Login Error:', error);
+			toast.error(
+				error instanceof AxiosError
+					? (error?.response?.data?.message ?? error?.message)
+					: error instanceof Error
+						? error?.message
+						: 'Failed to login'
+			);
+		}
 	};
 
 	return (
@@ -81,45 +124,44 @@ const Login: React.FC = () => {
 
 				{/* Content */}
 				<div className="relative z-10 max-w-lg">
-	<motion.div
-		initial={{ opacity: 0, y: 20 }}
-		animate={{ opacity: 1, y: 0 }}
-		transition={{ duration: 0.6, delay: 0.3 }}
-	>
-		<h1 className="text-6xl font-bold text-p4 mb-6 max-xl:text-5xl">
-			Welcome to <b className="text-p1">Obscyra</b>
-		</h1>
-		<p className="text-xl text-p4/70 mb-8 leading-relaxed max-xl:text-lg">
-			Share files instantly, securely, and without leaving a trace. 
-			Your privacy meets simplicity — no installs, no local storage, no limits.
-		</p>
-		<div className="space-y-4">
-			<div className="flex items-center gap-4">
-				<div className="w-12 h-12 rounded-xl  flex items-center justify-center backdrop-blur-sm">
-					<div className="w-12 h-12 rounded-xl   flex items-center justify-center backdrop-blur-sm">
-					<img src="/images/detail-3.png" alt="" />
+					<motion.div
+						initial={{ opacity: 0, y: 20 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{ duration: 0.6, delay: 0.3 }}
+					>
+						<h1 className="text-6xl font-bold text-p4 mb-6 max-xl:text-5xl">
+							Welcome to <b className="text-p1">Obscyra</b>
+						</h1>
+						<p className="text-xl text-p4/70 mb-8 leading-relaxed max-xl:text-lg">
+							Share files instantly, securely, and without leaving a trace. Your
+							privacy meets simplicity — no installs, no local storage, no limits.
+						</p>
+						<div className="space-y-4">
+							<div className="flex items-center gap-4">
+								<div className="w-12 h-12 rounded-xl  flex items-center justify-center backdrop-blur-sm">
+									<div className="w-12 h-12 rounded-xl   flex items-center justify-center backdrop-blur-sm">
+										<img src="/images/detail-3.png" alt="" />
+									</div>
+								</div>
+								<p className="text-p4/80">End-to-end encrypted transfers</p>
+							</div>
+							<div className="flex items-center gap-4">
+								<div className="w-12 h-12 rounded-xl  flex items-center justify-center backdrop-blur-sm">
+									<div className="w-12 h-12 rounded-xl   flex items-center justify-center backdrop-blur-sm">
+										<img src="/images/detail-2.png" alt="" />
+									</div>
+								</div>
+								<p className="text-p4/80">No local storage required</p>
+							</div>
+							<div className="flex items-center gap-4">
+								<div className="w-12 h-12 rounded-xl   flex items-center justify-center backdrop-blur-sm">
+									<img src="/images/detail-1.png" alt="" />
+								</div>
+								<p className="text-p4/80">Instant file sharing</p>
+							</div>
+						</div>
+					</motion.div>
 				</div>
-				</div>
-				<p className="text-p4/80">End-to-end encrypted transfers</p>
-			</div>
-			<div className="flex items-center gap-4">
-				<div className="w-12 h-12 rounded-xl  flex items-center justify-center backdrop-blur-sm">
-					<div className="w-12 h-12 rounded-xl   flex items-center justify-center backdrop-blur-sm">
-					<img src="/images/detail-2.png" alt="" />
-				</div>
-				</div>
-				<p className="text-p4/80">No local storage required</p>
-			</div>
-			<div className="flex items-center gap-4">
-				<div className="w-12 h-12 rounded-xl   flex items-center justify-center backdrop-blur-sm">
-					<img src="/images/detail-1.png" alt="" />
-				</div>
-				<p className="text-p4/80">Instant file sharing</p>
-			</div>
-		</div>
-	</motion.div>
-</div>
-
 			</motion.div>
 
 			{/* Right Side - Login Form */}
@@ -179,14 +221,20 @@ const Login: React.FC = () => {
 						</CardHeader>
 
 						<CardContent className="relative z-10 px-7 max-md:px-5">
-							<form onSubmit={handleSubmit(onSubmit)} className="space-y-5 max-md:space-y-4">
+							<form
+								onSubmit={handleSubmit(onSubmit)}
+								className="space-y-5 max-md:space-y-4"
+							>
 								{/* Username Field */}
 								<motion.div
 									initial={{ opacity: 0, x: -20 }}
 									animate={{ opacity: 1, x: 0 }}
 									transition={{ duration: 0.5, delay: 0.3 }}
 								>
-									<Label htmlFor="username" className="block text-sm font-medium text-p4 mb-2 max-sm:text-xs">
+									<Label
+										htmlFor="username"
+										className="block text-sm font-medium text-p4 mb-2 max-sm:text-xs"
+									>
 										Username
 									</Label>
 									<div className="relative">
@@ -215,7 +263,10 @@ const Login: React.FC = () => {
 									animate={{ opacity: 1, x: 0 }}
 									transition={{ duration: 0.5, delay: 0.4 }}
 								>
-									<Label htmlFor="password" className="block text-sm font-medium text-p4 mb-2 max-sm:text-xs">
+									<Label
+										htmlFor="password"
+										className="block text-sm font-medium text-p4 mb-2 max-sm:text-xs"
+									>
 										Password
 									</Label>
 									<div className="relative">
@@ -238,7 +289,11 @@ const Login: React.FC = () => {
 											onClick={() => setShowPassword(!showPassword)}
 											className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-p4/60 hover:text-p4 hover:bg-transparent transition-colors duration-200"
 										>
-											{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+											{showPassword ? (
+												<EyeOff size={18} />
+											) : (
+												<Eye size={18} />
+											)}
 										</Button>
 									</div>
 									{errors.password && (
@@ -273,19 +328,21 @@ const Login: React.FC = () => {
 								</motion.div>
 
 								{/* Divider */}
-								<motion.div
+								{/* <motion.div
 									initial={{ opacity: 0 }}
 									animate={{ opacity: 1 }}
 									transition={{ duration: 0.5, delay: 0.6 }}
 									className="flex items-center my-5 max-md:my-4"
 								>
 									<hr className="flex-grow border-s4/25" />
-									<span className="px-3 text-p4/50 text-sm max-sm:text-xs">or</span>
+									<span className="px-3 text-p4/50 text-sm max-sm:text-xs">
+										or
+									</span>
 									<hr className="flex-grow border-s4/25" />
-								</motion.div>
+								</motion.div> */}
 
 								{/* Google Login Button */}
-								<motion.div
+								{/* <motion.div
 									initial={{ opacity: 0, y: 10 }}
 									animate={{ opacity: 1, y: 0 }}
 									transition={{ duration: 0.5, delay: 0.7 }}
@@ -307,7 +364,7 @@ const Login: React.FC = () => {
 										/>
 										<span className="font-medium">Login with Google</span>
 									</Button>
-								</motion.div>
+								</motion.div> */}
 							</form>
 						</CardContent>
 
